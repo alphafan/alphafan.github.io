@@ -37,10 +37,4 @@
         this.previousTop = currentTop;
       });
   }
-    
-  // Update time
-  setInterval(function(){
-      $("span.subheading").text( (new Date()).toLocaleTimeString() );
-  }, 1000);
-
 })(jQuery); // End of use strict
