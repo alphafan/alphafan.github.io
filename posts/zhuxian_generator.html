@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Yufan's Blog - Zhu Xian Generator</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom fonts for this template -->
+    <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href='https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+    
+    <!-- Rainbow css for the code -->
+    <link href="../css/rainbow/monokai.css" rel="stylesheet" type="text/css">
+
+    <!-- Custom styles for this template -->
+    <link href="../css/clean-blog.min.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+      <div class="container">
+        <a class="navbar-brand" href="/index.html">Yufan Zheng</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          Menu
+          <i class="fa fa-bars"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/index.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/about.html">About</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/blogs.html">Blogs</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/contact.html">Contact</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Header -->
+    <header class="masthead" style="background-image: url('../img/blogs/zhuxian_generator/zhuxian-generator-bg.jpg')">
+      <div class="overlay"></div>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <div class="post-heading">
+              <h1>[NLP] 利用LSTM为诛仙小说生成续集</h1>
+              <br>
+              <h2 class="subheading">基于 TensorFlow 的 Text Generation</h2>
+              <span class="meta">Posted by <a href="#">Yufan Zheng</a> on August 24, 2017</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Post Content -->
+    <article>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+           
+            <p>最开始接触《诛仙》这本小说，大概是我还在念初中那会儿。仍记得是我的一位朋友在图书馆里给我推荐了这本书。当我翻开那本在图书馆里已被无数人阅过显破旧的书，仅仅看了几章，就立即被这本小说的情节所吸引。作为一本玄幻小说，萧鼎凭借他那天马行空的想象力，优美极了的文笔，让我从此爱不释手。一口气将当时已经出来了的前四部看完了，并每次都在第一时间将刷完后面的书。</p>
+
+            <p>多年之后，又出了多款基于诛仙的网游，手游，甚至也被翻拍成了由李易峰和杨雪主演的电视剧。对于这些诛仙衍生品，我也依然是他们的忠实粉丝，即是是非常简单的游戏，也会忍不住想去玩上一玩。就算是改编的电视剧《诛仙 青云志》的剧情实在不忍吐槽（很想把编剧拉出来打一顿），出于对萧鼎大作的喜爱，我也还是边看边骂的强忍着将整部剧看完了。</p>
+            
+            <h2 class="section-heading">Motivation</h2>
+
+            <p>随着坠入魔道的鬼王被张小凡打败，《诛仙》也走向了完结。当年的我，恋恋不舍的合上书本，叹到不知何时才能再遇到这么吸引我的小说了。</p>
+            
+            <span class="caption text-muted">一阵轻风吹过，屋檐下的铃铛迎风而响，绿色的衣角轻轻飘起，仿佛也带着几分笑意；清脆的铃声，随着风儿飘然而上，回荡在天地之间。</span>
+
+            <p>最近开始了对 NLP 的学习和研究，其中就涉及到了一个重要的领域：Text Generation。说的是如何利用深度学习的方法，来进行文本生成。于是我立刻就想到，何不利用所学的知识，来进行《诛仙》续集的生成呢？完成少年时的梦想呢。</p>
+
+            <p>于是，说做就做，开始了拿 TensorFlow 进行诛仙续集生成的训练了.</p>
+
+            <h2 class="section-heading">Model Selection</h2>
+
+            <p>要完成续集，首先，我们需要做的是定义文本生成的训练模型。</p>
+            
+            <p>基于深度学习的文本生成模型，最 natural 的方法，就是利用循环神经网络 RNN 了。RNN 模型，简单来说，就是循环的将前面的信号，和当前单位的输入信号进行综合处理，并将最后的输出信号传入下一个单位。如此循环往复，就可以一直传，一直传下去啦。</p>
+
+            <p>哈哈，是不是有点点抽象，没事儿，来看个图吧。</p>
+            
+            <img class="img-fluid" src="../img/blogs/zhuxian_generator/rnn-model.jpg" alt="">
+
+            <p>左边的是我们常用的表示 RNN 的方法，看上去是不是像自己传值给自己呢。但其实我们打开这个模型，就会发现，它实际上是一个时序的模型。上一个时间段的输入，平行传入当前神经元，加上当前的输入，我们利用以一些权值矩阵，激励函数，在那个神经元里面偷偷摸摸的 hia hia 干些不能见人的事情了。。。哈哈，不是啦，干一些矩阵的乘法和加法，然后拿着激励函数吧唧一下，最后将得到的结果，或者直接输出，并传入到下一个神经元中。</p>
+
+            <p>这种时序的模型，和我们自然语言处理的句子，有着异曲同工的相似之处，我们可以将自然语言的一个句子看成是一个一个的单词串联起来的。每个单词单独作为一个输入，并传入到下一个单词所对应的神经元中。</p>
+            
+            <blockquote class="blockquote">那既然 RNN 模型这么好，我们是不是就要拿着它来搞来搞去了呢？</blockquote>
+           
+            <p>No No No... 没那么简单啦，因为 RNN 存在着几个变种，而它的那几个变种，有着比最基本的 RNN 更好的训练效果。其中最有名也最常用的两种 RNN 神经元是：</p>
+            
+            <ul>
+              <li><b>LSTM</b> : <b>L</b>ong <b>S</b>hort-<b>T</b>erm <b>M</b>emory</li>
+              <li><b>GRU</b> : <b>G</b>ated <b>R</b>ecurrent <b>U</b>nit</li>
+            </ul>
+            
+            <p>我们接着来看一张图，里面介绍了在这两种神经元的黑箱子里面，究竟都发生了些神马。</p>
+            
+            <img class="img-fluid" src="../img/blogs/zhuxian_generator/lstm-gru-cells.png" alt="">
+           
+            <p>噢，我的天哪，好复杂，这些圈圈线线的是啥，还有这些符号，都是什么鬼。呐，我也不能靠几个简单的句子给说清楚，那就扔几个链接吧，那里的人讲的非常仔细，当然呐，前提是你得看的懂英文哈。了解 LSTM 点<a href="http://colah.github.io/posts/2015-08-Understanding-LSTMs/">这里</a>，GRU 讲的比较清楚的我没找到，欢迎大家给我发个链接过来。</p>
+            
+            <p>尽管我们没有做详细的介绍这两种模型，但是我们简单提及一下他们的不同。</p>
+            
+            <ul>
+              <li>LSTM 中一共有三道门（Gate），分别是遗忘门，输入门和输出门。而在 GRU 中只有两道门：重置门和更新门。所以从计算量上来讲，LSTM 的计算量略微的比 GRU 要慢。当然啦，RNN 由于模型最简单，训练起来也是最快了了。</li>
+              <li>绝大多数的情况下，两种模型谁好谁坏，并没有一个定论，往往我们都是在实际问题中进行尝试，哪个好用哪个。</li>
+            </ul>
+            
+            <p>通过我的实验，我发现 LSTM 模型生成出来的结果比较能看，于是就选择了 LSTM 作为这一次的 Text Generation 的神经元。</p>
+                        
+            <span class="caption text-muted">A famous joke in Deep Learning: You can always get best result using LSTMs.</span>
+            
+            <h2 class="section-heading">Load Dataset</h2>
+            
+            <p>好啦，咱们现在开始正式的进入处理阶段了。</p>
+            
+            <pre><code data-language="python"># Import Libraries
+import tensorflow as tf
+import os
+from six.moves import cPickle
+import collections
+import codecs
+import numpy as np
+import jieba</code></pre>
+           
+            <p>接下来，我们需要导入数据，我在网上下载了一个 诛仙 小说全集的txt文件。如果有触犯版权问题，希望各大佬看在我这个诛仙脑残狂热粉的份上，放过我吧。而且我只是用来做科研用途，并未商用，真哒。</p>
+            
+            <pre><code data-language="python"># Load the book as a string
+FILE_PATH = './data/诛仙.txt'
+
+# Raw corpus of the book
+corpus_raw = u""
+
+with codecs.open(FILE_PATH, 'r', 'utf-8') as book_file:
+    corpus_raw += book_file.read()
+
+print("Corpus is {} characters long".format(len(corpus_raw)))</code></pre>
+            
+            <h2 class="section-heading">Chinese Segmentation</h2>
+            
+            <p>由于我们处理的是中文的文本，而中文的单词不是一个一个的汉字，中文句子的最小单位是多个汉字组成的词语，所以第一步，我们要做的就是“中文分词”。</p>
+
+            <pre><code data-language="python"># Whether or not use Chinese split words, if false, use single chars to feed
+USE_SPLIT = True</code></pre>
+            
+            <p>分词的算法现在已经非常的成熟了，像基于贪心算法的双向最长词匹配算法，到后来的 HMM 和 CRF 算法。甚至是加上类似运用了 Bi-RNN 的深度学习方法。目前，中文的分词的准确率已经能够得到 98% 以上了。所以没必要在这个上面花很多的功夫来提升生成文本的结果了。</p>
+            
+            <p>并且有一些开源的中文分词库，我们也可以直接拿来用，比如 jieba 分词，HanLP 等等。没有必要去重复这些已经很成熟的东西，所以我直接拿 jieba 来分词了，简单，快速，而且好用。开源万岁！！</p>
+         
+            <pre><code data-language="python"># Create lookup tables
+def create_lookup_tables(text, use_split=USE_SPLIT):
+    """ 
+    Create lookup tables for vocab
+    :param text      : Whether or not use chinese segmentation
+    :param use_split : The corpus text to be split into words
+    :return: A tuple of dicts (vocab_to_int, int_to_vocab, text_index)
+    """
+    words = list(jieba.cut(text)) if use_split else list(text)
+    vocab = set(words) if use_split else set(text)
+    
+    int_to_vocab = {key: word for key, word in enumerate(vocab)}
+    vocab_to_int = {word: key for key, word in enumerate(vocab)}
+    
+    if use_split:
+        text_index = [vocab_to_int[word] for word in words]
+    else:
+        text_index = [vocab_to_int[word] for word in text]
+    
+    return vocab_to_int, int_to_vocab, text_index
+         
+
+vocab_to_int, int_to_vocab, corpus_int = create_lookup_tables(corpus_raw)
+print("Vocabulary size : {}, number of Chinese words in text : {}" \
+         .format(len(corpus_int), len(vocab_to_int)))</code></pre>
+         
+             <h2 class="section-heading">Build Network</h2>
+             
+             <p>终于到了最最最最最重要的环节啦，终于要构建我们的神经网络啦啦啦啦！</p>
+             
+             <pre><code data-language="python"># Hyperparameters
+num_epochs = 400        """ 将诛仙从头到尾训练多少遍 """
+batch_size = 512        """ 每次训练 feed 的 batch 大小 """
+rnn_size = 128          """ RNN Cell 的 Hidden Units 的大小 """
+num_layers = 2          """ RNN 的层数 """
+keep_prob = 0.7         """ Dropout 的保留率 """
+embed_dim = 128         """ 词向量的维度，这个要和 RNN Hidden Units 的大小一致 """
+seq_length = 30         """ Sequence 的长度 """
+learning_rate = 0.001   """ 学习率 """
+save_dir = './save'     """ 保存模型的位置 """</code></pre>
+         
+             <p>咦，这是什么鬼。我裤子都脱了，你就给我看一大堆参数。说好的模型呢？神经网络呢？</p>
+          </div>
+        </div>
+      </div>
+    </article>
+    
+    <hr>
+
+    <!-- Footer -->
+    <footer>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <ul class="list-inline text-center">
+              <li class="list-inline-item">
+                <a href="#">
+                  <span class="fa-stack fa-lg">
+                    <i class="fa fa-circle fa-stack-2x"></i>
+                    <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                  </span>
+                </a>
+              </li>
+              <li class="list-inline-item">
+                <a href="#">
+                  <span class="fa-stack fa-lg">
+                    <i class="fa fa-circle fa-stack-2x"></i>
+                    <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
+                  </span>
+                </a>
+              </li>
+              <li class="list-inline-item">
+                <a href="#">
+                  <span class="fa-stack fa-lg">
+                    <i class="fa fa-circle fa-stack-2x"></i>
+                    <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                  </span>
+                </a>
+              </li>
+            </ul>
+            <p class="copyright text-muted">Copyright &copy; Yufan's Website 2017</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="../vendor/jquery/jquery.min.js"></script>
+    <script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom scripts for this template -->
+    <script src="../js/clean-blog.min.js"></script>
+    
+    <!-- Rainbow Python -->
+    <script src="../js/rainbow.min.js"></script>
+    <script src="../js/rainbow.python.js"></script>
+  </body>
+
+</html>
