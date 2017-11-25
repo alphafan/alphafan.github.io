@@ -305,7 +305,211 @@ final_state = tf.identity(final_state, name='final_state')
             <p>我们知道 RNN 是一个连续的神经网络，是前面一个 Cell 的状态向着下一个 Cell 进行着状态传递，所以理论上来说，它是没有头，也没有尾的。但是实际中，我们需要给它一个初始状态，这样它才能进行着传递。着就是第一部分代码的意思，我给它一个初始值全部为0的一个初始状态，用作我们的起始。</p>
              
             <p>接下来，我们将文本输入，首先通过一个 embedding 层，将离散的单词对应成向量，用 dynamic_rnn 来计算通过了这次连续的传递值之后，得到最终的状态和输出。</p>
+    
+             <pre><code data-language="python">============
+""" Part of Code """
+ 
+# Take RNN output and make logits
+logits = tf.contrib.layers.fully_connected(outputs, vocab_size, activation_fn=None)
+
+# Calculate the probability of generating each word
+probs = tf.nn.softmax(logits, name='probs')
+
+# Define loss function
+cost = tf.contrib.seq2seq.sequence_loss(
+    logits,
+    targets,
+    tf.ones([input_text_shape[0], input_text_shape[1]])
+)
+
+============</code></pre>
              
+             <p>上面这一段代码，解释了如何计算我们的 cost ，我们知道 RNN 是一个序列的神经网络模型，在序列的每一个节点上都有输出，我们的 outputs 就是对应着的在每个节点的输出的组合。接下来，我们用一个全连接层，将输出映射到一个有我们词汇量大小的输出层上，这一步即是推测我们预测的单词到底是谁，这个输出的理想情况当然就是单词的 one hot vector 了，当然，这个是不可能达到的，所以，我们就由此定义了 loss，即是我们要它离 one hot vector 越来越近。</p>
+        
+            <pre><code data-language="python">============
+""" Part of Code """
+ 
+# Learning rate & optimizer
+optimizer = tf.train.AdamOptimizer(learning_rate)
+
+# Gradient clipping to avoid exploding gradients
+gradients = optimizer.compute_gradients(cost)
+capped_gradients = [(tf.clip_by_value(grad, -1., 1.), value) for grad, value in gradients if grad is not None]
+train_op = optimizer.apply_gradients(capped_gradients)
+
+============</code></pre>
+        
+            <p>这里就是简单的最小化误差的训练过程了，需要提及的是，在 RNN 中，一定要做 gradient clipping，不然很容易就梯度爆炸，学不到东西，这也算是一个小 trick 吧。</p>
+         
+            <h2 class="section-heading">Batch Generation</h2>
+             
+            <p>诛仙的文本很长，我们不可能一次性把所有的数据都塞进去训练，只能将它裁剪成一小段一小段的进行训练。</p>
+             
+            <pre><code data-language="python"># Batch the data
+def get_batches(int_text, batch_size, seq_length):
+    """ Return batches of input and target data
+    
+    :param int_text:   text with words replaced by their ids
+    :param batch_size: the size that each batch of data should be
+    :param seq_length: the length of each sequence
+    :return: batches of data as a numpy array
+    """
+    words_per_batch = batch_size * seq_length
+    num_batches = len(int_text)//words_per_batch
+    int_text = int_text[:num_batches*words_per_batch]
+    y = np.array(int_text[1:] + [int_text[0]])
+    x = np.array(int_text)
+    
+    x_batches = np.split(x.reshape(batch_size, -1), num_batches, axis=1)
+    y_batches = np.split(y.reshape(batch_size, -1), num_batches, axis=1)
+    
+    batch_data = list(zip(x_batches, y_batches))
+    
+    return np.array(batch_data)
+        
+batches = get_batches(corpus_int, batch_size, seq_length)
+num_batches = len(batches)
+print("Num Batches per Epoche : {}, Total Epochs : {}" \
+    .format(num_batches, num_epochs))</code></pre>
+         
+             <p>这段代码没有什么难度，只是将数据分成一个一个的 batch，需要稍微解释一下的是 target 实际上就是 input 向右平移一位的结果。</p>
+             
+             <h2 class="section-heading">Train Model</h2>
+             
+             <pre><code data-language="python"># Train Model
+with tf.Session(graph=train_graph) as sess:
+   
+    # Init all variable
+    sess.run(tf.global_variables_initializer())
+    
+    # Use start time to compute how much time have passed
+    import time
+    start_time = time.time()
+    
+    for epoch in range(num_epochs):
+        # Init state with first batch when restart    
+        state = sess.run(initial_state, {input_text: batches[0][0]})
+        
+        for batch_index, (x, y) in enumerate(batches):
+            
+            batch_start_time = time.time()
+            
+            feed_dict = {
+                input_text: x,
+                targets: y,
+                initial_state: state,
+                lr: learning_rate
+            }
+            train_loss, state, _ = sess.run([cost, final_state, train_op], feed_dict)
+            
+            # Every 100 batches, compute time
+            if batch_index % 100 == 0:
+                time_elapsed   = time.time() - start_time
+                time_per_batch = time.time() - batch_start_time
+                num_batches_remaining = (num_epochs - epoch) * num_batches + num_batches - batch_index 
+                print('Epoch {:>3} Batch {:>4}/{} train_loss = {:.3f} time_per_batch = {:.3f} time_elapsed = {:.3f}   time_remaining = {:.0f}'.format(
+                    epoch + 1,
+                    batch_index + 1,
+                    num_batches,
+                    train_loss,
+                    time_per_batch,
+                    time_elapsed,
+                    num_batches_remaining * time_per_batch))
+                
+                # save model every 100 batches
+                saver = tf.train.Saver()
+                saver.save(sess, save_dir)
+                print('Model Trained and Saved')</code></pre>
+                
+            <p>这段代码虽然很长，但是值得说的东西不多，只是进行一个 TensorFlow 的基本训练，然后每 100 个 batches 打印下时间和存储一下当前模型。这个存储的过程非常重要，想想你好不容易训练了十多个小时，结果一关程序，下一次想再跑，还得再来一次十个小时，太可怕了，所以存一下模型是个好习惯。</p>
+            
+            <p>接下来就是漫长的训练过程了，训练 400 遍在 1080 GPU 上大概需要十个小时左右。据观察，loss大概在第300遍之后就很稳定，不怎么下降了，所以我们训练400遍，应该是足够的了。</p>
+            
+            <h2 class="section-heading">Generate Text</h2>
+            
+            <p>模型已经训练好了，接下来就可以生成文本了。首先我们需要定义一个根据概率来挑选下一个词的函数。</p>
+            
+            <pre><code data-language="python"># Pick a Random Word
+def pick_word(probabilities, int_to_vocab):
+    """
+    Pick the next word with some randomness
+    :param probabilities: Probabilites of the next word
+    :param int_to_vocab: Dictionary of word ids as the keys and words as the values
+    :return: String of the predicted word
+    """
+    return np.random.choice(list(int_to_vocab.values()), 1, p=probabilities)[0]
+            </code></pre>
+            
+            <p>我们在输入前面一个单词序列的时候，会得到一个与词库大小相同的一个概率向量，这个时候就需要通过概率来随机的选择下一个单词了。</p>
+            
+            <pre><code data-language="python"># Load the Graph and Generate Text
+gen_length = 1000
+prime_words = '一阵轻风吹过，屋檐下的铃铛迎风而响，绿色的衣角轻轻飘起，仿佛也带着几分笑意；清脆的铃声，随着风儿飘然而上，回荡在天地之间。'
+
+loaded_graph = tf.Graph()
+with tf.Session(graph=loaded_graph) as sess:
+    # Load the saved model
+    loader = tf.train.import_meta_graph(save_dir + '.meta')
+    loader.restore(sess, save_dir)
+    
+    # Get tensors from loaded graph
+    input_text = loaded_graph.get_tensor_by_name('input:0')
+    initial_state = loaded_graph.get_tensor_by_name('initial_state:0')
+    final_state = loaded_graph.get_tensor_by_name('final_state:0')
+    probs = loaded_graph.get_tensor_by_name('probs:0')
+    
+    # Sentences generation setup
+    gen_sentences = list(jieba.cut(prime_words)) if USE_SPLIT else prime_words.split()
+    prev_state = sess.run(initial_state, {input_text: np.array([[1 for word in gen_sentences]])})
+    
+    # Generate sentences
+    for n in range(gen_length):
+        # Dynamic Input
+        dyn_input = [[vocab_to_int[word] for word in gen_sentences[-seq_length:]]]
+        dyn_seq_length = len(dyn_input[0])
+
+        # Get Prediction
+        probabilities, prev_state = sess.run(
+            [probs, final_state],
+            {input_text: dyn_input, initial_state: prev_state})
+        
+        # Get predict word
+        word_probs = probabilities[0][dyn_seq_length-1]
+        pred_word = pick_word(word_probs, int_to_vocab)
+
+        gen_sentences.append(pred_word)
+        
+    # Remove tokens
+    chapter_text = ''.join(gen_sentences)
+        
+    print(chapter_text)
+            </code></pre>
+            
+            <p>终于，我们可以生成续集了。我利用了诛仙的最后一段作为预测的开始序列，让我们来看看生成的结果中，有些什么有意思的事情发生呢？</p>
+            
+            <h2 class="section-heading">Story Exploration</h2>
+            
+            <p><b>【剧情走向一】 鬼王居然没有死，他去了十万大山中，幽姬去那儿找到了他，并且鬼厉和鬼王再次会面了。</b></p>
+            
+            <blockquote class="blockquote">幽姬慢慢在了右边，良久之后，面上的隐约在心灰意懒：‘脆弱在这么半天也早已像是无打造出来的年头，甚至全南疆灵位遮挡天下在了十万大山中，还有生机声──”鬼厉安静了过来，面对著，鬼王仍就是在原地竟然在。</blockquote>
+            
+              <p><b>【剧情走向二】 陆雪琪道出真相，黄鸟出自焚香谷聚玄神坛，而青云门竟是源自合欢派？</b></p>
+            
+            <blockquote class="blockquote">陆雪琪笑了笑，道：“眼下当初那根，黄鸟乃是聚玄火坛，大家责罚你的，合欢派大名鼎鼎的青云门吧！”</blockquote>
+            
+              <p><b>【剧情走向三】 田不易在陆雪琪将要面临的一场大战中恍惚现身了，并极大的鼓舞了她。</b></p>
+            
+            <blockquote class="blockquote">陆雪琪也是变色，在大战之中深入，其中还有一个大到是觉得这曾经的时光，象是凭空清晰的异声轻轻注视，一双屋子凝望着田不易，仿佛似乎恰好地在她身旁。</blockquote>
+            
+            <p>除了这一些零星的剧情，我还惊喜的发现，在一些描述的文字中，机器貌似已经学会了模仿萧鼎的文笔了。</p>
+            
+            <blockquote class="blockquote">只是，它默默留下的花永恒瞬间碎裂，安静，呼吸将口而伸出，向后当去吹到他的身前，跟着那片细细的十丈，渐渐在平静强撑一口气落，颓然闭上了路上，有没有连挥洒一样，若非有一层冰寒意，如猛兽袭击此，十倍，一身劲风直接高悬，漫天雷鸣，不消光线在空中光线划过，微微寒嘴角在，露出畏惧。</blockquote>
+            
+            <p>是不是已经和萧鼎的文笔有几分神似啦？</p>
+            
+            <h2 class="section-heading">Conclusion</h2>
+            
+            <p>当然啦，我们发现以现有的算法，很难让机器做到很完整的写出大段的有逻辑的话，而且剧情零星，碎片化，并没有和上下文有关联。自然语言处理对大段文字的逻辑分析，还是有着很大的空间可以提升的。</p>
           </div>
         </div>
       </div>
