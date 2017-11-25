@@ -80,7 +80,7 @@
            
             <p>最开始接触《诛仙》这本小说，大概是我还在念初中那会儿。仍记得是我的一位朋友在图书馆里给我推荐了这本书。当我翻开那本在图书馆里已被无数人阅过显破旧的书，仅仅看了几章，就立即被这本小说的情节所吸引。作为一本玄幻小说，萧鼎凭借他那天马行空的想象力，优美极了的文笔，让我从此爱不释手。一口气将当时已经出来了的前四部看完了，并每次都在第一时间将刷完后面的书。</p>
 
-            <p>多年之后，又出了多款基于诛仙的网游，手游，甚至也被翻拍成了由李易峰和杨雪主演的电视剧。对于这些诛仙衍生品，我也依然是他们的忠实粉丝，即是是非常简单的游戏，也会忍不住想去玩上一玩。就算是改编的电视剧《诛仙 青云志》的剧情实在不忍吐槽（很想把编剧拉出来打一顿），出于对萧鼎大作的喜爱，我也还是边看边骂的强忍着将整部剧看完了。</p>
+            <p>多年之后，又出了多款基于诛仙的网游，手游，甚至也被翻拍成了由李易峰和杨雪主演的电视剧。对于这些诛仙衍生品，我也依然是他们的忠实粉丝，即使是非常简单的游戏，也会忍不住想去玩上一玩。就算是改编的电视剧《诛仙 青云志》的剧情实在不忍吐槽（很想把编剧拉出来打一顿），出于对萧鼎大作的喜爱，我也还是边看边骂的强忍着将整部剧看完了。</p>
             
             <h2 class="section-heading">Motivation</h2>
 
@@ -124,7 +124,7 @@
             <p>尽管我们没有做详细的介绍这两种模型，但是我们简单提及一下他们的不同。</p>
             
             <ul>
-              <li>LSTM 中一共有三道门（Gate），分别是遗忘门，输入门和输出门。而在 GRU 中只有两道门：重置门和更新门。所以从计算量上来讲，LSTM 的计算量略微的比 GRU 要慢。当然啦，RNN 由于模型最简单，训练起来也是最快了了。</li>
+              <li>LSTM 中一共有三道门（Gate），分别是遗忘门，输入门和输出门。而在 GRU 中只有两道门：重置门和更新门。所以从计算量上来讲，LSTM 的计算量略微的比 GRU 要大，速度也会慢一些。当然啦，Basic RNN 由于模型最简单，训练起来也是最快的了。</li>
               <li>绝大多数的情况下，两种模型谁好谁坏，并没有一个定论，往往我们都是在实际问题中进行尝试，哪个好用哪个。</li>
             </ul>
             
@@ -213,6 +213,99 @@ save_dir = './save'     """ 保存模型的位置 """</code></pre>
              <p>咦，这是什么鬼。我裤子都脱了，你就给我看一大堆参数。说好的模型呢？神经网络呢？</p>
              
              <p>不要着急，这些是我们在训练神经网络的时候的一些可以调整的参数，我们将它单独提取出来，这样，在将来就不需要到程序的代码里面到处找他们来修改啦。</p>
+             
+             <p>这些参数对最终的结果都有着影响，有一些很显然就可以看出来的，比如训练次数等等。有一些参数的设置比较 tricky，像 sequence length 和 rnn size 的设置。往往我们认为 sequence 越长，最前面的信息就越难保留到末尾，如果想要让信息尽可能的传递到最终，我们则需要将 rnn size 设置的大一点。 </p>
+             
+             <p>接下来，进入正题，构建我们的神经网络。</p>
+             
+             <pre><code data-language="python"># TensorFlow Train Graph
+train_graph = tf.Graph()
+
+with train_graph.as_default():    
+    
+    # Initialize input placeholders
+    input_text = tf.placeholder(tf.int32, [None, None], name='input')
+    targets = tf.placeholder(tf.int32, [None, None], name='targets')
+    lr = tf.placeholder(tf.float32, name='learning_rate')
+    
+    # Calculate text attributes
+    vocab_size = len(int_to_vocab)
+    input_text_shape = tf.shape(input_text)
+    
+    # Build the RNN cell
+    lstm = tf.contrib.rnn.BasicLSTMCell(num_units=rnn_size)
+    drop_cell = tf.contrib.rnn.DropoutWrapper(lstm, output_keep_prob=keep_prob)
+    cell = tf.contrib.rnn.MultiRNNCell([drop_cell] * num_layers)
+    
+    # Set the initial state
+    initial_state = cell.zero_state(input_text_shape[0], tf.float32)
+    initial_state = tf.identity(initial_state, name='initial_state')
+    
+    # Create word embedding as input to RNN
+    embed = tf.contrib.layers.embed_sequence(input_text, vocab_size, embed_dim)
+    
+    # Build RNN
+    outputs, final_state = tf.nn.dynamic_rnn(cell, embed, dtype=tf.float32)
+    final_state = tf.identity(final_state, name='final_state')
+    
+    # Take RNN output and make logits
+    logits = tf.contrib.layers.fully_connected(outputs, vocab_size, activation_fn=None)
+    
+    # Calculate the probability of generating each word
+    probs = tf.nn.softmax(logits, name='probs')
+    
+    # Define loss function
+    cost = tf.contrib.seq2seq.sequence_loss(
+        logits,
+        targets,
+        tf.ones([input_text_shape[0], input_text_shape[1]])
+    )
+    
+    # Learning rate optimizer
+    optimizer = tf.train.AdamOptimizer(learning_rate)
+    
+    # Gradient clipping to avoid exploding gradients
+    gradients = optimizer.compute_gradients(cost)
+    capped_gradients = [(tf.clip_by_value(grad, -1., 1.), value) for grad, value in gradients if grad is not None]
+    train_op = optimizer.apply_gradients(capped_gradients)
+             </code></pre>
+             
+             <p>这段代码看上去有一点点长哈，会不会看上去有一点吃力，没关系，我们来分段讲解一下主要部分的代码。</p>
+             
+             <pre><code data-language="python">============
+""" Part of Code """
+ 
+# Build the RNN cell
+lstm = tf.contrib.rnn.BasicLSTMCell(num_units=rnn_size)
+drop_cell = tf.contrib.rnn.DropoutWrapper(lstm, output_keep_prob=keep_prob)
+cell = tf.contrib.rnn.MultiRNNCell([drop_cell] * num_layers)
+
+============</code></pre>
+            
+            <p>上面这一段代码，主要是为了构建了一个多层的，带有 dropout 的复合 LSTM 神经元。Dropout 能有效的防止过拟合，而多层的神经元，能学到更多的东西。这个神经元将作为我们神经网络的基本单位，来组成庞大的神经网络。</p>
+            
+            <pre><code data-language="python">============
+""" Part of Code """
+ 
+# Set the initial state
+initial_state = cell.zero_state(input_text_shape[0], tf.float32)
+initial_state = tf.identity(initial_state, name='initial_state') 
+   
+# Create word embedding as input to RNN
+embed = tf.contrib.layers.embed_sequence(input_text, vocab_size, embed_dim)
+
+# Build RNN
+outputs, final_state = tf.nn.dynamic_rnn(cell, embed, dtype=tf.float32)
+final_state = tf.identity(final_state, name='final_state')
+
+============</code></pre>
+            
+            <p>上面这一段代码，展示了如何构建神经网络。</p>
+            
+            <p>我们知道 RNN 是一个连续的神经网络，是前面一个 Cell 的状态向着下一个 Cell 进行着状态传递，所以理论上来说，它是没有头，也没有尾的。但是实际中，我们需要给它一个初始状态，这样它才能进行着传递。着就是第一部分代码的意思，我给它一个初始值全部为0的一个初始状态，用作我们的起始。</p>
+             
+            <p>接下来，我们将文本输入，首先通过一个 embedding 层，将离散的单词对应成向量，用 dynamic_rnn 来计算通过了这次连续的传递值之后，最终的状态和输出</p>
+             
           </div>
         </div>
       </div>
