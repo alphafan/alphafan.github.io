@@ -140,9 +140,33 @@
               <img class="img-fluid" src="../img/blogs/tf_sr_wav_pp/result_filter_1.png">
             </div>
             
-            <p>可以看到，小的波形已经被过滤掉了，只留下了主要的波形。</p>
+            <p>可以看到，小的波形，噪音已经被过滤掉了，只留下了主要的波形。</p>
             
             <h2 class="section-heading">Remove Silence</h2>
+            
+            <p>去除前面和后面的没有信号的部分，这一部分比较简单，主要是根据一个阈值来去除，小于阈值的就砍掉，直到到了第一个大于这个阈值的地方，就不砍了。处理完的结果如下图。</p>
+            
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/tf_sr_wav_pp/result_filter_2.png">
+            </div>
+            
+            <h2 class="section-heading">Resample Wav</h2>
+            
+            <p>这里主要是对时序数据进行重新采样，采样保留了波形的形状，同时可以降低数据的维度，计算更快，而且对于异常的数据，比如时间不为一秒钟的数据也能达到同样的维度。</p>
+            
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/tf_sr_wav_pp/sampled_wav.png">
+            </div>
+            
+            <h2 class="section-heading">Final Result</h2>
+            
+            <p>如果此时我们将三种预处理的方法合并到一起，对随机的几个wav数据进行处理，看看最后的结果如何。</p>
+            
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/tf_sr_wav_pp/final_result.png">
+            </div>
+            
+            <p>右边是处理后的波形，这时的波形几乎不包括杂音，我们使用的是真正的发出该单词的声音。而且声音的前后也没有 Silence。</p>
           </div>
         </div>
       </div>
