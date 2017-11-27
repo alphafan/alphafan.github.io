@@ -65,7 +65,7 @@
               <h1>[Kaggle] TensorFlow 语音识别竞赛中 WAV 数据的波形预处理</h1>
               <br>
               <h2 class="subheading">去除 WAV 数据中的杂音和前后的沉默片段</h2>
-              <span class="meta">Posted by <a href="/about.html">Yufan Zheng</a> on November 28, 2017</span>
+              <span class="meta">Posted by <a href="/about.html">Yufan Zheng</a> on November 27, 2017</span>
             </div>
           </div>
         </div>
@@ -77,7 +77,72 @@
       <div class="container">
         <div class="row">
           <div class="col-lg-8 col-md-10 mx-auto">
-        
+           
+            <p>最近和大黄，金岩，志强还有郝老师一起在筹备一个 Kaggle 语音识别的竞赛。数据是由 TensorFlow 提供，压缩后的训练集和测试集大约有 4 Gb 左右。我们五个基友虽然身在三个不同的国家，但大家依然踌躇满志的想要闷声搞点事情。</p>
+            
+            <p>这个竞赛的目标是从一段长度为一秒钟的音频中，识别的单词。每段音频中都只包含一个单词，单词的种类一总有 33 种。比赛除了对识别准确率有要求之外，对运行的速度也有要求，能够在树莓派 ( Raspberry Pi 3 ) 上跑出来也会得到一个特别奖。</p>
+            
+            <p>这篇博文主要介绍了一种对波形进行预处理的方法，预处理主要分为以下三个部分。由于比赛还在进行中，代码部分就不展示了。只是在这里介绍预处理的方法。</p>
+            
+            <ul>
+              <li>1，主要音频的提取，对杂音进行过滤</li>
+              <li>2，将开始和最末尾的没有信号的部分去除</li>
+              <li>3，降维和重采样</li>
+            </ul>
+            
+            <h2 class="section-heading">Data at A Glance</h2>
+            
+            <p>首先，我们导入数据来看一下，这些音频到底长什么样子吧。</p>
+            
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/tf_sr_wav_pp/original_wavs.png">
+            </div>
+             
+            <p>简单的扫一眼数据，我们会很容易的发现，如果我们直接的拿这个数据进行处理的话，会有以下的几个问题。而这些问题如果不矫正的话，很有可能导致最后训练的模型精度不高。</p>
+
+            <ul>
+              <li>问题一：波形数据的分布非常不均匀，有的波形出现在音频快结束的时候，有的在中间，有的则在最开始。</li>
+              <li>问题二：开始和结束有很长时间的数据是没有声音的。</li>
+              <li>问题三：有一些wav中在除了主体的波之外的位置，有一些小的波，而这些短音频非常可能是外界的噪音。</li>
+            </ul>
+             
+            <p>这也让我有了想来对波形数据进行一些预处理的想法。</p>
+             
+            <h2 class="section-heading">Keep Main Voice Only</h2>
+             
+            <p>第一个预处理，就是对杂音的处理。让我们首先来看一个有代表性的例子，很明显的能够看出来，在这个波频里面，有至少两段不同的声音，显然长的那一部分是对应发音的声音，而短的部分应该是外界的噪音。</p>
+            
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/tf_sr_wav_pp/annotated_wav.png">
+            </div>
+            
+            <p>现在我们的主要目标是能够将主要的声音提取出来，将其他的声音抹去，采用的方法如下。</p>
+            
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/tf_sr_wav_pp/splitted_wav.png">
+            </div>
+            
+            <p>将一整段波分成好多个等长的部分，通过平均值来决定是否是有声音或者是没声音，我们用每个小段的声音振幅的平均值，来判断这一段时间，是有声音还是没有声音的。设定一个阈值，均值小于它的就没声音，大于它的就是有声音。是用数组来表示的话，就是一串0，1的数字，0代表没有声音，而1代表有声音。形象一点用图像来表示，图中的绿色部分是有声音的，而蓝色部分是没有声音的。</p>
+            
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/tf_sr_wav_pp/kept_wav.png">
+            </div>
+            
+            <p>很显然，图中最长的连续的绿色的波，即是我们需要的数据，我们现在需要把它分离出来。为了防止前面和后面的小波段仍含有部分主声音的信息，但是由于被其他声音中和而均值没有达到阈值，我们也需要将它加入到最后过滤完的波里面来。</p>
+            
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/tf_sr_wav_pp/main_voice_wav.png">
+            </div>
+            
+            <p>最后我们来看看这个预处理之后的结果如何。</p>
+            
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/tf_sr_wav_pp/result_filter_1.png">
+            </div>
+            
+            <p>可以看到，小的波形已经被过滤掉了，只留下了主要的波形。</p>
+            
+            <h2 class="section-heading">Remove Silence</h2>
           </div>
         </div>
       </div>
