@@ -134,40 +134,9 @@
               <li>我们的单词库里一共只有三个单词，三个单词属于各个主题的概率见下表。</li>
             </ul>
             
-            <table class="table text-center">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Music (0.8 x 50%)</th>
-                  <th>Sport (0.8 x 30%)</th>
-                  <th>Politics (0.8 x 20%)</th>
-                  <th>Background 0.2</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Rock</td>
-                  <td>0.6</td>
-                  <td>0.2</td>
-                  <td>0.1</td>
-                  <td>0.1</td>
-                </tr>
-                <tr>
-                  <td>Basketball</td>
-                  <td>0.25</td>
-                  <td>0.5</td>
-                  <td>0.1</td>
-                  <td>0.15</td>
-                </tr>
-                <tr>
-                  <td>Policy</td>
-                  <td>0.1</td>
-                  <td>0.1</td>
-                  <td>0.75</td>
-                  <td>0.05</td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/plsa_em/prob-table.png">
+            </div>
             
             <p>有了这些信息之后，我们开看看这个“作家”会如何根据主题和概率的分布来写文章吧。千里之行，始于足下。要想生成一个文章，我们要一个一个单词的来。首先，他要写第一个单词。</p>
             
@@ -184,6 +153,8 @@
             <div class="text-center">
               <img class="img-fluid" src="../img/blogs/plsa_em/generate_text.png">
             </div>
+            
+            <p>这张图我们需要从右下角出发。</p>
             
             <h2 class="section-heading">EM Process</h2>
             
