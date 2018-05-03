@@ -158,12 +158,50 @@
             
             <p>写完第一个单词之后，就可以看写一篇文章了。其实每次作家做的事情都是重复写一个一个单词的过程。</p>
             
-            <h2 class="section-heading">EM Process</h2>
+            <h2 class="section-heading">EM Parameters</h2>
             
             <p>通过之前的讲解，我们知道了主题模型 PLSA 算法的目标以及它的输入输出，那么我们要求解的参数，怎么计算得到呢？</p>
             
             <p>这个时候，我们就要引进 EM 算法，来帮助我们求解了。EM 算法具体原理和推导并不是这一片文章要介绍的，我们只是看一下在 PLSA 中利用 EM 来求解。</p>
             
+            <p>要利用EM来求解。首先，需要确定哪些参数是未知的。下图的公式中，显示了未知的参数分为了两个部分，</p>
+            <ul>
+              <li>&Pi;<sub>d,j</sub>指的是在文档 d 中，主题 j 占的比例。</li>
+              <li>&theta;<sub>j</sub>指的是在主题 j 中，各个单词出现的比例。</li>
+            </ul>
+            
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/plsa_em/unknown_para.png">
+            </div>
+              
+            <p>这也很好理解为什么需要这两组参数，因为实际上，如果有了每一个文档的主题的占比和每个主题单词出现的频率，一个生成模型就呼之欲出了。</p>
+              
+            <h2 class="section-heading">EM Process</h2>
+            
+            <p>明确了参数，那么来看一下EM的求解过程吧。EM 算法的精髓在我看来其实是两个。</p>
+              
+            <ul>
+              <li>1. 引入一个合适的 hidden vector 隐藏变量。</li>
+              <li>2. 找到一个可自收敛的 E 过程 和 M 过程来将需要求解的参数。</li>
+            </ul>
+            
+            <p>首先来看第一个问题，PLSA 的EM 过程中隐藏参数的定义</p>
+                        
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/plsa_em/em_e_step.png">
+            </div>
+              
+            <p>上图中的 Z<sub>d, w</sub> 就是隐藏变量，它代表的是在文档 d 中单词 w  属于某一个主体的这一个事件，我们的 E 过程就是计算这个 Z 事件的概率。</p>
+                        
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/plsa_em/em_m_step.png">
+            </div>
+            
+            <p>M 过程通过隐藏变量来重新估计 E 过程中的两个输入。至此，EM 终于得到了收敛。</p>
+              
+            <h2 class="section-heading">Write At The End</h2>
+            
+            <p>这一篇 blog 历时四个月，之前在12月的时候写了一半，现在才将它补齐。很多东西在第二次写的时候已经忘记了，这再次说明了趁热打铁，当时明白就要马上写下来的道理。以后再接再厉。</p>
           </div>
         </div>
       </div>
