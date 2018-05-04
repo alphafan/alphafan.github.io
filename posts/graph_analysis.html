@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Yufan's Blog - NLP 主题模型 PLSA 算法的讲解和求解过程</title>
+      
+    <!-- Icon -->
+    <link rel="icon" type="image/png" href="/img/icon.png">
+
+    <!-- Bootstrap core CSS -->
+    <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom fonts for this template -->
+    <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href='https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+    
+    <!-- Rainbow css for the code -->
+    <link href="../css/rainbow/monokai.css" rel="stylesheet" type="text/css">
+
+    <!-- Custom styles for this template -->
+    <link href="../css/clean-blog.min.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+      <div class="container">
+        <a class="navbar-brand" href="/index.html">Yufan Zheng</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          Menu
+          <i class="fa fa-bars"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/index.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/about.html">About</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/blogs.html">Blogs</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/contact.html">Contact</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Header -->
+    <header class="masthead" style="background-image: url('../img/blogs/graph_analysis/bg.png')">
+      <div class="overlay"></div>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <div class="post-heading">
+              <h1>[Graph] 图分析--聚类系数，节点距离，联通子图和图和稳定性分析</h1>
+              <br>
+              <h2 class="subheading">介绍图分析的四个基本分析方面</h2>
+              <span class="meta">Posted by <a href="/about.html">Yufan Zheng</a> on May 4, 2018</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Post Content -->
+    <article>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <p>最近公司开始要做 Social Media 方面的项目了，为了能更好的做这个项目，我也开始了Social Network Analysis 的研究和学习，这一篇博客记录下我在学习社交网络分析时接触到的几个概念。</p>
+            
+            <h2 class="section-heading">Cluster Coefficient</h2>
+            
+            <p>在谈到 Cluster Coefficient（聚类系数）之前，先介绍一个概念，叫做 Triadic Closure。Triadic Closure 指的是在一个三角形中，有两个边已经连接上了，只有一个边是断开的和一种情况。</p>
+            
+            <div class="text-center">
+               <img class="img-fluid" src="../img/blogs/graph_analysis/tradic.png">
+            </div>
+            
+            <p>不难看出，在一个图模型中，如果出现了上图所示的这种连接的话，未连接的两个节点会有趋势被连接上。那些在网络中快要形成三角形但是还没有形成的，就是我们需要的。在一个连接图中找 Triadic Closure，会非常的有用。比如可用于发现社交网络中，还未连接的，但可能成为好友的人。</p>
+            
+            <p>基于 Tradic Closure，我们可以定义图的聚类参数。我们先从如何计算一个节点的聚类参数开始说起。</p>
+            
+             <h2 class="section-heading">Local Cluster Coefficient</h2>
+             
+             <p>一个节点的聚类参数被称为 Local Cluster Coefficient。它的计算方法也是非常的简单粗暴。先计算所有与当前节点连接的节点中间可能构成的 link 有多少个，这个数会作为分母，然后计算实际上有多少个节点被连接上了，这个数会作为分子。最终的计算结果就是 Local Cluster Coefficient。</p>
+             
+            <div class="text-center">
+               <img class="img-fluid" src="../img/blogs/graph_analysis/compute.png">
+            </div>
+            
+            <p>举个栗子，上图中的节点 C 的 Local Cluster Coefficient 就是 <sup>1</sup>&frasl;<sub>3</sub>。</p>
+            
+            <h2 class="section-heading">Global Cluster Coefficient</h2>
+            
+            <p>知道了如何计算单个节点的聚类系数，现在来看如何计算整个图的 Cluster Coefficient。 </p>
+            
+            <p>一种最简单粗暴的方法是，先计算每一个节点的 Local Cluster Coefficient，然后取平均值。</p>
+            <p>第二种方法，是先计算在图中已经关闭上的三角形的个数，除上没有闭上的三角形的个数。这种计算方法叫做 Transitivity。</p>
+            
+            <div class="text-center">
+               <img class="img-fluid" src="../img/blogs/graph_analysis/transitivity.png">
+            </div>
+            
+            <p>这两种方法并没有优劣之分，只是 Transitivity 会倾向于给 degree 大的节点较大的权重。</p>
+            
+            <h2 class="section-heading">Node Distance</h2>
+            
+            <p>节点距离，指的是两个节点间的最短路径的长度。为了获得最短距离，通常可以采用图的深度优先遍历，或者广度优先遍历。对于一个较大的网络，想要获得从一个节点到所有节点的距离，会推荐使用
+            广度优先遍历，因为广度优先遍历可以一层一层的进行计算距离。</p>
+            
+            <p>接下来介绍几个用于描述网络节点距离的参数</p>
+            <ul>
+                <li>Average distance： 这个很好理解，就是所有两两节点之间的最短距离的平均值，最直接的描述了图的紧密程度。</li>
+                <li>Eccentricity：这个参数描述的是从任意一个节点，到达其他节点的最大距离</li>
+                <li>Diameter：图中的最大两个节点间的距离</li>
+                <li>Radius：图中的最小两个节点间的距离</li>
+                <li>Periphery： 和 Diameter 对应，那些最大节点距离等于 diameter 的节点</li>
+                <li>Center： 和 Radius 对应，那些最大节点距离等于 radius 的节点</li>
+            </ul>
+            
+            <p>利用 Python 来计算这些参数的示例代码如下：</p>
+           
+           <pre><code data-language="python"># Example code using networkx
+import networkx as nx
+
+G = nx.Graph()
+G.add_edges_from([('A', 'K'), ('A', 'B'), ('A', 'C'), ('B', 'C'),
+                  ('B', 'K'), ('C', 'E'), ('C', 'F'), ('D', 'E'),
+                  ('E', 'F'), ('E', 'H'), ('F', 'I'), ('I', 'J')])
+
+# ==> Average distance (Average Shortest Path Length)
+print(nx.average_shortest_path_length(G))
+# 2.3777777777777778
+
+# ==> Diameter
+print(nx.diameter(G))
+# 5
+
+# ==> Eccentricity
+print(nx.eccentricity(G))
+# {'K': 5, 'I': 4, 'E': 3, 'D': 4, 'H': 4, 
+#  'B': 4, 'A': 4, 'F': 3, 'C': 3, 'J': 5}
+
+# ==> Radius
+print(nx.radius(G))
+# 3
+
+# ==> Periphery
+print(nx.periphery(G))
+# ['K', 'J']
+
+# ==> Center
+print(nx.center(G))
+# ['E', 'F', 'C']</code></pre>
+        
+            <h2 class="section-heading">Connected Components</h2>
+             
+             <p>满足子联通图的充分必要条件有两个：</p>
+             
+             <ul>
+                 <li>1. 子连通图中的每个节点都可以有路径可以连接到其他节点</li>
+                 <li>2. 任何其他非连通图单位的节点都没有路径可以连接到该连通图</li>
+             </ul>
+            
+              <div class="text-center">
+               <img class="img-fluid" src="../img/blogs/graph_analysis/coo.png">
+            </div>
+            
+             
+             <p>这里着重介绍一下在 Directed Graph 中的两种判断是否为联通图的方式</p>
+             
+             <ul>
+                 <li>1. 强联通图：每个节点 u 可以到 v，v 也可以到 u。</li>
+                 <li>2. 弱联通图： 只需要 u 可以到 v 即可，可以想象成，满足的条件就是将有向图变成无向图之后是强链接的即可。</li>
+             </ul>
+             
+              <h2 class="section-heading">Network Robustness</h2>
+              
+              <p>图的稳定性表现在，如果我移除任意节点，或者移除任意边，这个图的连接性是否仍然可以保证连通性。</p>
+              <p>图的稳定性分析在一些场景中非常有用，举个栗子，比如我们有一个航班图，我们需要分析如果某一个机场意外关闭，或者某一个航班意外取消，这会不会影响出行。
+              所以图的稳定性分析实际上描述的是一个图抵抗攻击的能力。同样的应用场景还有，电力网络，互联网攻击等。</p>
+              
+              <p>那么如何定量的描述一个网络的稳定性呢，两个指标：</p>
+              <ul>
+                  <li>1. 断开一个网络需要的最少的 Node Cuts</li>
+                  <li>2. 断开一个网络需要的最少的 Edge Cuts</li>
+              </ul>
+            
+              <div class="text-center">
+               <img class="img-fluid" src="../img/blogs/graph_analysis/disconnect.png">
+            </div>
+             
+             <p>如上图所示，如果我们移除网络中的 A 节点，这个网络就会断开。</p>
+              
+              <p>除了断开一个网络，有的时候我们也需要分析 A 节点到 B 节点之间的连接的稳定性，分析链接的稳定的指标也非常类似以上：</p>
+              <ul>
+                  <li>1. 断开两个节点的链接需要的最少的 Node Cuts</li>
+                  <li>2. 断开两个节点的链接需要的最少的 Edge Cuts</li>
+              </ul>
+              
+            <div class="text-center">
+               <img class="img-fluid" src="../img/blogs/graph_analysis/dis2.png">
+            </div>
+            
+             <p>如上图所示，如果我们移除网络中的 A -> N 和 J -> O 连接，G -> L 的连接将会断开。</p>
+             
+             <h2 class="section-heading">Summary</h2>
+             
+             <p>这篇博客一共介绍了图分析的四个方面：聚类系数，节点距离，联通子图和图和稳定性分析。并给出了相对应的参数来定量描述这些指数。他们会对应着不同的应用场景。</p>
+          </div>
+        </div>
+      </div>
+    </article>
+    
+    <hr>
+
+    <!-- Footer -->
+    <footer>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <ul class="list-inline text-center">
+              <li class="list-inline-item">
+                <a href="#">
+                  <span class="fa-stack fa-lg">
+                    <i class="fa fa-circle fa-stack-2x"></i>
+                    <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                  </span>
+                </a>
+              </li>
+              <li class="list-inline-item">
+                <a href="#">
+                  <span class="fa-stack fa-lg">
+                    <i class="fa fa-circle fa-stack-2x"></i>
+                    <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
+                  </span>
+                </a>
+              </li>
+              <li class="list-inline-item">
+                <a href="https://github.com/alphafan">
+                  <span class="fa-stack fa-lg">
+                    <i class="fa fa-circle fa-stack-2x"></i>
+                    <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                  </span>
+                </a>
+              </li>
+            </ul>
+            <p class="copyright text-muted">Copyright &copy; Yufan's Website 2017</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="../vendor/jquery/jquery.min.js"></script>
+    <script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom scripts for this template -->
+    <script src="../js/clean-blog.min.js"></script>
+    
+    <!-- Rainbow Python -->
+    <script src="../js/rainbow.min.js"></script>
+    <script src="../js/rainbow.python.js"></script>
+  </body>
+
+</html>
