@@ -1,43 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
-
   <head>
-
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
-
-    <title>Yufan's Blog - DS 平衡二叉搜索树</title>
-    
+    <title>Yufan's Blog - DS 自平衡二叉搜索树</title>
     <!-- Icon -->
     <link rel="icon" type="image/png" href="/img/icon.png">
-
     <!-- Bootstrap core CSS -->
     <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-
     <!-- Custom fonts for this template -->
     <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
     <link href='https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
-    
     <!-- Rainbow css for the code -->
     <link href="../css/rainbow/monokai.css" rel="stylesheet" type="text/css">
-
     <!-- Custom styles for this template -->
     <link href="../css/clean-blog.min.css" rel="stylesheet">
-
   </head>
-
   <body>
-
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
       <div class="container">
         <a class="navbar-brand" href="/index.html">Yufan Zheng</a>
         <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-          Menu
-          <i class="fa fa-bars"></i>
+        Menu
+        <i class="fa fa-bars"></i>
         </button>
         <div class="collapse navbar-collapse" id="navbarResponsive">
           <ul class="navbar-nav ml-auto">
@@ -57,7 +46,6 @@
         </div>
       </div>
     </nav>
-
     <!-- Page Header -->
     <header class="masthead" style="background-image: url('../img/blogs/avl_tree/bg.jpg')">
       <div class="overlay"></div>
@@ -74,71 +62,58 @@
         </div>
       </div>
     </header>
-
     <!-- Post Content -->
     <article>
       <div class="container">
         <div class="row">
           <div class="col-lg-8 col-md-10 mx-auto">
-             <p>AVL 树是一个自平衡二叉搜索树（BST），作为一个二叉搜索树的变种，AVL 除了满足左节点的值永远小于根节点的值，右节点的值永远大于根节点的值的基本二叉搜索树的特征外，它还要求左右子树的高度差不能超过一。</p>
-             
-             <div class="text-center">
-               <img class="img-fluid" src="../img/blogs/avl_tree/avl_exam.png">
-             </div>
-                          
-             <p>举个栗子，上图中的左边的树是一个 AVL Tree，而右边的的则不是，因为可以看到左边的子树的高度和右边的子树的高度差已经超过了一。</p>
-             
-             <h2 class="section-heading">Why AVL?</h2>
-             
-             <p>大多数 BST 操作（例如搜索，最大值，最小值，插入，删除等）都需要 O ( h ) 时间，其中 h 是 BST 的高度。这些操作的代价可能变成 O ( n ) 对于偏斜的二叉树。 如果在每次插入和删除之后确保树的高度保持 O ( logn )，那么我们可以保证所有这些操作的 O ( logn ) 的上限。 AVL 树的高度始终为 O ( logn )，其中 n 是树中节点的数量。</p>
-             
-             <h2 class="section-heading">Insertion</h2>
-             
-             <p>为了确保给定的树在每次插入后都保持 AVL，我们必须增加标准的 BST 插入操作来执行一些重新平衡。 以下是可以在不违反 BST 属性的情况下重新平衡 BST 的两个基本操作：1. 向左旋转；2. 向右旋转。下图中展示了插入节点时旋转的过程，其中节点右上方的数字，代表的是平衡因子，即是左右两边子树的高度差。</p>
-
-             <div class="text-center">
-                 <img alt="" src="//upload.wikimedia.org/wikipedia/commons/thumb/f/fd/AVL_Tree_Example.gif/220px-AVL_Tree_Example.gif" width="660" height="372" class="img-fluid" srcset="//upload.wikimedia.org/wikipedia/commons/f/fd/AVL_Tree_Example.gif 1.5x" data-file-width="320" data-file-height="180">
-             </div>
-             
-             <p>首先来分解一下这两个最基本的动作，向左旋转和向右旋转。左右旋转，是保持树是平衡状态的关键步骤。</p> 
-              
-             <div class="text-center">
-               <img class="img-fluid" src="../img/blogs/avl_tree/left_rotate.png">
-             </div>
-             
-             <p>上图一个左旋转的例子。执行左旋转的时候，我们需要做到以下几点：</p>
-             <ul>
-                 <li>1. 使右节点(B)成为子树的根。</li>
-                 <li>2. 移动旧的根节点(A)到新根的左节点。</li>
-                 <li>3. 如果新根(B)原来有左节点，那么让原来B的左节点成为新根左节点(A)的右节点。</li>
-             </ul>
-             
-             <div class="text-center">
-               <img class="img-fluid" src="../img/blogs/avl_tree/right_rotate.png">
-             </div>
-             
-             <p>在右旋转的时候，我们需要做到：</p>
-             <ul>
-                 <li>1. 使左节点 ( C ) 成为子树的根。</li>
-                 <li>2. 移动旧根 ( E ) 到新根的右节点。</li>
-                 <li>3. 如果新根 ( C ) 原来有右节点 ( D )，那么让 D 成为新根右节点(E)的左节点。</li>
-             </ul>
-             
-             <h2 class="section-heading">Steps to Follow for Insertion</h2>
-             <p>对于新插入的节点为 w ，插入的步骤如下：</p>
-             <ul>
-                 <li>1. 为 w 执行标准BST插入。</li>
-                 <li>2. 从 w 开始，往上走，找到第一个不平衡节点。 设 z 是第一个不平衡节点，y 是从 w 到 z 的路径上出现的 z 的孩子，x 是从 w 到 z 的路径上出现的 z 的孙子。</li>
-                 <li>3. 通过在以 z 为根的子树上执行适当的旋转来重新平衡树。 可以有4种可能的情况需要处理，因为x，y 和 z 可以按4种方式排列。 以下是可能的4种安排：
-                 <ul>
-                     <li>a : y 是 z 的左边孩子，x 是 y 的左边孩子（Left Left Case）</li>
-                     <li>b : y 是 z 的左边孩子，x 是 y 的右边孩子（Left Right Case）</li>
-                     <li>c : y 是 z 的右边孩子，x 是 y 的右边孩子（Right Right Case）</li>
-                     <li>d : y 是 z 的右边孩子，x 是 y 的左边孩子（Right Left Case）</li>
-                 </ul>
-                 </li>
-             </ul>
-             <pre>a) Left Left Case
+            <p>AVL 树是一个自平衡二叉搜索树（BST），作为一个二叉搜索树的变种，AVL 除了满足左节点的值永远小于根节点的值，右节点的值永远大于根节点的值的基本二叉搜索树的特征外，它还要求左右子树的高度差不能超过一。</p>
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/avl_tree/avl_exam.png">
+            </div>
+            <p>举个栗子，上图中的左边的树是一个 AVL Tree，而右边的的则不是，因为可以看到左边的子树的高度和右边的子树的高度差已经超过了一。</p>
+            <h2 class="section-heading">Why AVL?</h2>
+            <p>大多数 BST 操作（例如搜索，最大值，最小值，插入，删除等）都需要 O ( h ) 时间，其中 h 是 BST 的高度。这些操作的代价可能变成 O ( n ) 对于偏斜的二叉树。 如果在每次插入和删除之后确保树的高度保持 O ( logn )，那么我们可以保证所有这些操作的 O ( logn ) 的上限。 AVL 树的高度始终为 O ( logn )，其中 n 是树中节点的数量。</p>
+            <h2 class="section-heading">Insertion</h2>
+            <p>为了确保给定的树在每次插入后都保持 AVL，我们必须增加标准的 BST 插入操作来执行一些重新平衡。 以下是可以在不违反 BST 属性的情况下重新平衡 BST 的两个基本操作：1. 向左旋转；2. 向右旋转。下图中展示了插入节点时旋转的过程，其中节点右上方的数字，代表的是平衡因子，即是左右两边子树的高度差。</p>
+            <div class="text-center">
+              <img alt="" src="//upload.wikimedia.org/wikipedia/commons/thumb/f/fd/AVL_Tree_Example.gif/220px-AVL_Tree_Example.gif" width="660" height="372" class="img-fluid" srcset="//upload.wikimedia.org/wikipedia/commons/f/fd/AVL_Tree_Example.gif 1.5x" data-file-width="320" data-file-height="180">
+            </div>
+            <p>首先来分解一下这两个最基本的动作，向左旋转和向右旋转。左右旋转，是保持树是平衡状态的关键步骤。</p>
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/avl_tree/left_rotate.png">
+            </div>
+            <p>上图一个左旋转的例子。执行左旋转的时候，我们需要做到以下几点：</p>
+            <ul>
+              <li>1. 使右节点(B)成为子树的根。</li>
+              <li>2. 移动旧的根节点(A)到新根的左节点。</li>
+              <li>3. 如果新根(B)原来有左节点，那么让原来B的左节点成为新根左节点(A)的右节点。</li>
+            </ul>
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/avl_tree/right_rotate.png">
+            </div>
+            <p>在右旋转的时候，我们需要做到：</p>
+            <ul>
+              <li>1. 使左节点 ( C ) 成为子树的根。</li>
+              <li>2. 移动旧根 ( E ) 到新根的右节点。</li>
+              <li>3. 如果新根 ( C ) 原来有右节点 ( D )，那么让 D 成为新根右节点(E)的左节点。</li>
+            </ul>
+            <h2 class="section-heading">Steps to Follow for Insertion</h2>
+            <p>对于新插入的节点为 w ，插入的步骤如下：</p>
+            <ul>
+              <li>1. 为 w 执行标准BST插入。</li>
+              <li>2. 从 w 开始，往上走，找到第一个不平衡节点。 设 z 是第一个不平衡节点，y 是从 w 到 z 的路径上出现的 z 的孩子，x 是从 w 到 z 的路径上出现的 z 的孙子。</li>
+              <li>
+                3. 通过在以 z 为根的子树上执行适当的旋转来重新平衡树。 可以有4种可能的情况需要处理，因为x，y 和 z 可以按4种方式排列。 以下是可能的4种安排：
+                <ul>
+                  <li>a : y 是 z 的左边孩子，x 是 y 的左边孩子（Left Left Case）</li>
+                  <li>b : y 是 z 的左边孩子，x 是 y 的右边孩子（Left Right Case）</li>
+                  <li>c : y 是 z 的右边孩子，x 是 y 的右边孩子（Right Right Case）</li>
+                  <li>d : y 是 z 的右边孩子，x 是 y 的左边孩子（Right Left Case）</li>
+                </ul>
+              </li>
+            </ul>
+            <pre>a) Left Left Case
              
          z                                      y 
         / \                                   /   \
@@ -147,7 +122,7 @@
      x   T3                               T1  T2  T3  T4
     / \
   T1   T2</pre>
-          <pre>b) Left Right Case
+            <pre>b) Left Right Case
           
      z                               z                           x
     / \                            /   \                        /  \ 
@@ -156,7 +131,7 @@
 T1   x                          y    T3                    T1  T2 T3  T4
     / \                        / \
   T2   T3                    T1   T2</pre>
-         <pre>c) Right Right Case
+            <pre>c) Right Right Case
          
   z                                y
  /  \                            /   \ 
@@ -165,7 +140,7 @@ T1   y     Left Rotate(z)       z      x
    T2   x                     T1  T2 T3  T4
        / \
      T3  T4</pre>
-         <pre>d) Right Left Case
+            <pre>d) Right Left Case
 
    z                            z                            x
   / \                          / \                          /  \ 
@@ -174,18 +149,16 @@ T1   y   Right Rotate (y)    T1   x      Left Rotate(z)   z      y
    x   T4                      T2   y                  T1  T2  T3  T4
   / \                              /  \
 T2   T3                           T3   T4</pre>
-        
-         <h2 class="section-heading">Algorithm Implementation</h2>
-         <p>以下是 AVL 树插入节点的算法。使用递归 BST 的插入方法来插入新节点。在递归 BST 插入的过程中，插入之后，我们可以获得以自下而上的方式一个一个指向祖先节点的指针。所以我们不需要父指针来进行额外的存储。递归代码本身遍历并访问新插入的节点的所有祖先。</p>
-         <ul>
-             <li>1）执行正常的 BST 插入。</li>
-             <li>2）当前节点必须是新插入节点的祖先之一。更新当前节点的高度。</li>
-             <li>3）获取当前节点的平衡因子（左子树高度 - 右子树高度）。</li>
-             <li>4）如果平衡因子大于1，则当前节点不平衡，并且我们处于 Left Left 或 Left Right 情况。为了检查是否遗留左大小，将新插入的值与左子树根中的值进行比较。</li>
-             <li>5）如果平衡因子小于-1，那么当前节点不平衡，我们处于 Right Right 或 Right Left 情况。要检查它是否正确的情况下，将新插入的值与右子树根中的值进行比较。</li>
-         </ul>
-
-         <pre><code data-language="python"># Python code to insert a node in AVL tree
+            <h2 class="section-heading">Algorithm Implementation</h2>
+            <p>以下是 AVL 树插入节点的算法。使用递归 BST 的插入方法来插入新节点。在递归 BST 插入的过程中，插入之后，我们可以获得以自下而上的方式一个一个指向祖先节点的指针。所以我们不需要父指针来进行额外的存储。递归代码本身遍历并访问新插入的节点的所有祖先。</p>
+            <ul>
+              <li>1）执行正常的 BST 插入。</li>
+              <li>2）当前节点必须是新插入节点的祖先之一。更新当前节点的高度。</li>
+              <li>3）获取当前节点的平衡因子（左子树高度 - 右子树高度）。</li>
+              <li>4）如果平衡因子大于1，则当前节点不平衡，并且我们处于 Left Left 或 Left Right 情况。为了检查是否遗留左大小，将新插入的值与左子树根中的值进行比较。</li>
+              <li>5）如果平衡因子小于-1，那么当前节点不平衡，我们处于 Right Right 或 Right Left 情况。要检查它是否正确的情况下，将新插入的值与右子树根中的值进行比较。</li>
+            </ul>
+            <pre><code data-language="python"># Python code to insert a node in AVL tree
  
 # Generic tree node class
 class TreeNode(object):
@@ -330,9 +303,7 @@ print()</code></pre>
         </div>
       </div>
     </article>
-    
     <hr>
-
     <!-- Footer -->
     <footer>
       <div class="container">
@@ -341,26 +312,26 @@ print()</code></pre>
             <ul class="list-inline text-center">
               <li class="list-inline-item">
                 <a href="#">
-                  <span class="fa-stack fa-lg">
-                    <i class="fa fa-circle fa-stack-2x"></i>
-                    <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
-                  </span>
+                <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                </span>
                 </a>
               </li>
               <li class="list-inline-item">
                 <a href="#">
-                  <span class="fa-stack fa-lg">
-                    <i class="fa fa-circle fa-stack-2x"></i>
-                    <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
-                  </span>
+                <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
+                </span>
                 </a>
               </li>
               <li class="list-inline-item">
                 <a href="https://github.com/alphafan">
-                  <span class="fa-stack fa-lg">
-                    <i class="fa fa-circle fa-stack-2x"></i>
-                    <i class="fa fa-github fa-stack-1x fa-inverse"></i>
-                  </span>
+                <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                </span>
                 </a>
               </li>
             </ul>
@@ -369,17 +340,13 @@ print()</code></pre>
         </div>
       </div>
     </footer>
-
     <!-- Bootstrap core JavaScript -->
     <script src="../vendor/jquery/jquery.min.js"></script>
     <script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-
     <!-- Custom scripts for this template -->
     <script src="../js/clean-blog.min.js"></script>
-    
     <!-- Rainbow Python -->
     <script src="../js/rainbow.min.js"></script>
     <script src="../js/rainbow.python.js"></script>
   </body>
-
 </html>
