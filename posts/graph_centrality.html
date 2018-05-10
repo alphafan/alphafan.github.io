@@ -94,7 +94,11 @@
             
             <h2 class="section-heading">Degree Centrality</h2>
             
-            <p>Degree 指的是节点的连接数。用一个节点与多少个其他的节点相连来衡量节点重要性的方法叫做 Degree Centrality，这也是最简单有效的方法。需要稍微注意一下的是，对于有向图，Degree Centrality 分为 in-degree 和 out-degree，通常的做法可以是采用其中一个指标，或者选择两个指标相加。</p>
+              <p>Degree 指的是节点的连接数。用一个节点与多少个其他的节点相连来衡量节点重要性的方法叫做 Degree Centrality，这也是最简单有效的方法。它的计算公式如下：</p>
+              <div class="text-center">
+              <img class="img-fluid" style="max-width:500px" src="../img/blogs/graph_centrality/formu1.png">
+            </div>
+              <p>需要稍微注意一下的是，对于有向图，Degree Centrality 分为 in-degree 和 out-degree，通常的做法可以是采用其中一个指标，或者选择两个指标相加。</p>
             
             <div class="text-center">
               <img class="img-fluid" style="max-width:500px" src="../img/blogs/graph_centrality/k1.png">
@@ -103,7 +107,14 @@
             <p>根据 Degree Centrality，最重要的五个节点是：34，1，33，3，2。</p>
             
             <h2 class="section-heading">Clossness Centrality</h2>
-        
+            
+            <p>Closeness Centrality 基于重要的节点会和其他的节点更近一些的原则，评判的指标则是根据该节点到所有其他节点的最小距离的平均值来判定的，公式如下：</p>
+            
+             <div class="text-center">
+              <img class="img-fluid" style="max-width:500px" src="../img/blogs/graph_centrality/f2.png">
+            </div>
+            
+            <p></p>
           </div>
         </div>
       </div>
