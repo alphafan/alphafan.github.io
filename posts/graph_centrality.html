@@ -83,7 +83,7 @@
             <p>那么问题来了，如何在网络中寻找这样的点呢？比如，下图是一个俱乐部 34 个会员的关系图，哪一些节点比较重要呢？</p>
                         
             <div class="text-center">
-              <img class="img-fluid" src="../img/blogs/graph_centrality/karate.png">
+              <img class="img-fluid" style="max-width:500px" src="../img/blogs/graph_centrality/karate.png">
             </div>
             
             <p>第一种情况，也是最常见的答案，会觉得 34 号节点和 1 号节点比较重要，因为他们有着最多的连接，意味着他们和最多的人是朋友，所以他们比较重要。</p>
@@ -94,8 +94,16 @@
             
             <h2 class="section-heading">Degree Centrality</h2>
             
-            <p></p>
+            <p>Degree 指的是节点的连接数。用一个节点与多少个其他的节点相连来衡量节点重要性的方法叫做 Degree Centrality，这也是最简单有效的方法。需要稍微注意一下的是，对于有向图，Degree Centrality 分为 in-degree 和 out-degree，通常的做法可以是采用其中一个指标，或者选择两个指标相加。</p>
             
+            <div class="text-center">
+              <img class="img-fluid" style="max-width:500px" src="../img/blogs/graph_centrality/k1.png">
+            </div>
+            
+            <p>根据 Degree Centrality，最重要的五个节点是：34，1，33，3，2。</p>
+            
+            <h2 class="section-heading">Clossness Centrality</h2>
+        
           </div>
         </div>
       </div>
