@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Yufan's Blog - Graph  图的生成演变模型和链接预测</title>
+    <!-- Icon -->
+    <link rel="icon" type="image/png" href="/img/icon.png">
+    <!-- Bootstrap core CSS -->
+    <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom fonts for this template -->
+    <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href='https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+    <!-- Rainbow css for the code -->
+    <link href="../css/rainbow/monokai.css" rel="stylesheet" type="text/css">
+    <!-- Custom styles for this template -->
+    <link href="../css/clean-blog.min.css" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+      <div class="container">
+        <a class="navbar-brand" href="/index.html">Yufan Zheng</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+        Menu
+        <i class="fa fa-bars"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/index.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/about.html">About</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/blogs.html">Blogs</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/contact.html">Contact</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <!-- Page Header -->
+    <header class="masthead" style="background-image: url('../img/blogs/graph_evolue/bg.jpg')">
+      <div class="overlay"></div>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <div class="post-heading">
+              <h1>[Graph] 图的生成演变模型和链接预测</h1>
+              <br>
+              <h2 class="subheading">介绍三种模拟真实世界的图生成和演变的数学模型，以及预测链接的方法</h2>
+              <span class="meta">Posted by <a href="/about.html">Yufan Zheng</a> on May 12, 2018</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+    <!-- Post Content -->
+    <article>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <p>这篇博客主要介绍网络的演变过程，和对应的几种数学模型来模拟这种生成的过程，最后介绍几种预测链接的方法。</p>
+            <h2 class="section-heading">Degree Distribution in Real-World Network</h2>
+            <p>节点的 Degree 描述的是当前节点与其他节点的连接的个数，通常我们比较关注的是无向图中的 Degree 和有向图的 In Degree，因为他们通常会描述的是节点的 Popularity。</p>
+              <p>下面三个例子描述的是真实世界网络中的节点的 Degree 的分布情况，其中：</p>
+               <ul>
+                <li>图 A 中的节点 Degree 分布描述的是 225 000 个演员共同出演电影的情况。</li>
+                <li>图 B 描述的是 325 000 个网络界面 link 的指向情况。</li>
+                <li>图 C 是 4 941 个电力网络节点的连接图。</li>
+              </ul>
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/graph_evolue/dedis.png">
+            </div>
+             <p>图中画出的是节点 Degree --> 节点出现概率的映射， 需要注意的是，这些坐标轴是 log 的对数处理过的。</p>
+            <p>不难看出，图中的虚线代表了曲线走向的趋势，是一种类似于递减的一次函数分布，但由于坐标轴做了对数处理，所以出当节点连接数增加的时候，出现的概率呈指数下降趋势。</p>
+            <p>用数学模型来表示这种趋势的话，就是一种 power law 的分布情况</p>
+             <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/graph_evolue/f1.png">
+            </div>
+            <p>其中 C 和 &alpha; 是常数，k 是节点的 Degree ，P ( k ) 是这种 Degree 出现的概率。<p>
+            <p>实际上，经过统计，在大多数的真实世界的网络中， &alpha; 的值通常在 2 到 3 之间。</p>
+            
+            <h2 class="section-heading">Preferential Attachement Model</h2>
+            <p>Preferential Attachement Model（以下简称 PAM） 是随机生成以上具有这种特征的网络的模型，PAM 的基本思路是如果一个节点的连接的节点越多，那么它接收新连接的可能性就越大。 具有更高 Degree 的节点具有更强的抓取添加到网络中的链接的能力。 </p>
+            <p>是基于以上的假设，PAM 的算法过程如下：</p>
+            <ul>
+                <li>从两个已经连接上的节点开始生成网络。</li>
+                <li>在每个时间步骤中，添加一个新节点，并将其连接到现有节点。</li>
+                <li>随机选择要连接的节点，其概率与每个节点的 Degree 成正比。</li>
+                <li>连接到节点 u 的概率是 Degree ( u ) / Sum_of_All_Degree。</li>
+            </ul>
+            <p>下图就是一步一步从两个连接的节点开始，生成图的过程，红圈中的节点是当前步骤需要插入的节点，其他的节点是已经存在于网络中的节点，其中每个节点上方的数字代表的是在插入节点时，根据它的 degree 计算出来的概率。</p>
+             <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/graph_evolue/pam1.png">
+            </div>
+            <p>直觉上，如果我们用连接人的社交网络来思考，那么优先连接就可以被理解。 这里从 A 到 B 的链接意味着人 A “知道”或“熟悉” B 人。有很多连接的节点代表着众多关系密切的知名人士。 当一个新人进入社区时，他/她更可能认识一个更明显的人，而不是相对未知的人。 </p>
+            <p>假设在万维网中，新的网页优先链接到有很多连接的网站，即非常知名的诸如Google之类的网站，而不是任何人都不知道的网页，所以如果有人通过随机选择现有链接来选择要链接的新页面，则选择特定页面的概率将与其 Degree 成正比例。</p>
+            <p>我们来看一个由 PAM 生成的包含 1 000 000 个节点的图的 degree 概率分布吧。</p>
+             <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/graph_evolue/figure_1.png">
+            </div>
+            <p>它确实和我们之前看到的真实世界中的分布是很类似的。</p>
+            <p>这种生成图模型的方法也被叫做 Barabasi Albert Graph，是为了纪念发明它的人而命名的。</p>
+            
+            <h2 class="section-heading">Rich-Get-Richer Model</h2>
+            <p>Rich-Get-Richer Model （以下简称 RGR）和 PAM 的出发点类似，都是认为 Degree 更高的点具有更强的吸附新节点的能力。（看这个模型的名字。。。）</p>
+            <p>RGR 模型算法的大多数不走和 PAM 是一样的，只有稍稍有一点改动，就是在新节点插入的时候，会有一定的概率 p 不去 attach 到已经存在的节点，而是 attach 到那个节点连接的节点。</p>
+            <p>这样做的原因是，PAM 模型中最后求得的指数的系数，通常都是 2，但是 RGR 模型由于有这个 p 的存在，指数系数就不一定是 2 了，而系数的大小则是由 p 的大小来决定的，这个更贴近真实生活中的情况。 </p>
+            
+            <h2 class="section-heading">Milgram Small World Experiment</h2>
+            <p>很多人可能听说过，世界上的人，只要经过短短 6 次连接，就可以相互认识。那么这个结论是怎么来的呢？实际上它是来源于一个非常有名的实验叫做 Milgram Small World Experiment。</p>
+            <p>这个实验的做法是，在美国波士顿市随机的选择 249 个人，让这 249 个人去送信，信的接收方是随机选取的，但接收方的基本信息会被提供给送信的人，比如接收房的姓名，性别，年龄，职业等。</p>
+            <p>送信的人如果认识接收信的人的话，就送给他，如果不知道的话，就将信交给一个他认识的并且觉得可能会认识这个人的人。</p>
+            <p>这个实验的结果是：有 64 / 296 的信件被成功送达了，平均的 path length 大约是6，分布从 0 到 11 不等。</p>
+            <p>这也是前面我们说的人与人之间只要 6 次连接就可以相互认识的典故的由来。这个实验有意思的发现有两个：</p>
+            <ul>
+                <li>1. 很多情况下，真实世界的人是可以相互通过很短的连接互相认识的。</li>
+                <li>2. 人们是有着自主发现最短路径的能力的。</li>
+            </ul>
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/graph_evolue/dis.png">
+            </div>
+            <p>当时的人们做这个实验的时候，并没有大数据，也没有计算能力可以计算得到真实的连接数。先如今，我们有着像 Facebook， Microsoft Instant Messager 等等让人们相互连接的网络，有着大数据做支撑，我们得到的数据是， 在 Facebook 上，人与人之间的距离是 4.74 （2011年），Microsoft Instant Messager 的距离是 7 （2008年）。所以实际上当年人为做实验的数据得到的 6，基本也是对的。</p>
+            
+             <h2 class="section-heading">Friend of a Friend</h2>
+            <p>真实的社交网络中，一个人的朋友的朋友可能和他也是朋友。这种指标在图中可以用 Local Clustering Coefficient （以下用 LCC 来表示）来表示。一个随机生成的图，它的 LCC 值会非常的低，但是在真实的网络中，这个 LCC 值往往很高。下图是 Facebook 在 2011 年的 LCC 的值</p>
+             <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/graph_evolue/dis2.png">
+            </div>
+            
+            <h2 class="section-heading">Small World Model</h2>
+            <p>不难看出，真实世界的社交网络有着明显的两个特征：</p>
+            <ul>
+                <li>人与人之间的距离很短: Avg Distance 小</li>
+                <li>连接呈现出 Cummunity 的趋势: LCC 较大</li>
+            </ul>
+            <p>前面的 PAM 和 RGR 模型，他们生成的网络只能曼度第一个条件，而第二个条件则无法满足。原因是，新加入的节点更倾向于和 degree 高的节点进行连接，所以节点距离往往不会太远，但是新节点之间的连接却不能保证，所以 LCC 值不会很高。</p>
+            <p>现在介绍的一种图的演变生成模型，Small World Model 则是可以生成一个同时满足这两个条件的网络的。他的生成过程如下。</p>
+            <ul>    
+                <li>1. 将图的节点生成成一个环的形状。</li>
+                <li>2. 定义一个概率 p</li>
+                <li>3. 遍历每一个节点 u - v，根据概率判断是否会重新连接节点，如果需要的话，就断开 u - v 的连接，将 u 随机的连上节点 w。</li>
+            </ul>
+             <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/graph_evolue/step.png">
+            </div>
+            <p>其中没有变动的链接表示按照当前的概率计算，它不需要重新连接，图中只显示了根据概率而重新连接的边。</p>
+            <p>所以在生成一个 Small World Model 的图的时候，有三个参数是需要给定的：</p>
+            <ul>
+                <li>1. 图有多少个节点</li>
+                <li>2. 平均每个节点会与多少个其他节点连接。</li>
+                <li>3. 有多大概率重新连接边</li>
+            </ul>
+             <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/graph_evolue/p.png">
+            </div>
+             <p>概率的大小直接影响了最终生成图的 LCC 和 Avg Distance。p 越大，距离越小，LCC 越高，但是图原本的结构就会遭到破坏，所以一般情况下，我们会选择 0 到 0.1 之间的概率来生成这个图。</p>
+             <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/graph_evolue/p2.png">
+            </div>
+            <p>上图中显示了，通过 Small World Model 生成出来的模型，满足了 Low Distance 和 High LCC 的要求。</p>
+            <p>这种生成图的方法也被叫做 Watts Strogatz Model，也是为了纪念发明它的人。</p>
+              <p>有的时候，Small World Model 生成的图会是断开连接的图，为了避免这种情况（因为大多数的时候，我们是希望生成一个连接图）。解决方法一般有两个：</p>
+              <ul>
+                  <li>可以在重新连边的时候，进行判断，如果此时是断开了的话，就再重新尝试连接，这种方法叫做 Connected Watts Strogatz Model</li>
+                  <li>或者不重新连接，而是加上一条连接，这种方法叫做 Newman Watts Strogatz Graph</li>
+              </ul>
+            
+            <h2 class="section-heading">Predict Link</h2>
+            <p>给定一个网络，如何判断哪些节点可能会被连接上。这也是在图的演变过程中很重要的一项研究，这里给出五种判断指标和两种特殊对于 community 中的连接预测的指标。</p>
+            <p><b>1. Common Neighbors</b></p>
+            <p>用两个节点间的共同邻居的数量来判断是否有趋势连接到一起。</p>
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/graph_evolue/1.png">
+            </div>
+            <p><b>2. Jaccard Coefficient</b></p>
+            <p>用共同邻居的个数 除以 所有邻居的个数</p>
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/graph_evolue/2.png">
+            </div>
+            <p><b>3. Resource Allocation Index</b></p>
+            <p>共同邻居的 Degree 的倒数的和</p>
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/graph_evolue/3.png">
+            </div>
+            <p><b>4. Adamic-Adar Index</b></p>
+            <p>共同邻居的 Degree 的对数的的倒数的的和</p>
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/graph_evolue/4.png">
+            </div>
+            <p><b>5. Preferential Attachment</b></p>
+            <p>受 Preferential Attachmen Model 的启发，Degree 高的节点更容易连接到别的点，用两个节点的 degree 的乘积来表示连接倾向。</p>
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/graph_evolue/5.png">
+            </div>
+            <p><b>6. Community Common Neighbors</b></p>
+            <p>和 Common Neighbors 类似，只不过给与在同一个 community 的共同节点更多一点权重。</p>
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/graph_evolue/6.png">
+            </div>
+             <p><b>7. Community Resource Allocation Index</b></p>
+            <p>和 Resource Allocation Index 类似，不过只计算在同一个 community 的共同节点。</p>
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/graph_evolue/6.png">
+            </div>
+            
+             <h2 class="section-heading">Conclusion</h2>
+             <p>这篇文章主要是为了记录了我在学习图的生成演变过程的学习笔记，我也是最近才开始了图分析的研究和学习，以前完全不知道有这样的一些东西，慢慢的经过学习，了解更多后，感觉像是打开了一个新世界的大门一样，图分析的研究还是很有意思的。</p>
+          </div>
+        </div>
+      </div>
+    </article>
+    <hr>
+    <!-- Footer -->
+    <footer>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <ul class="list-inline text-center">
+              <li class="list-inline-item">
+                <a href="#">
+                <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                </span>
+                </a>
+              </li>
+              <li class="list-inline-item">
+                <a href="#">
+                <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
+                </span>
+                </a>
+              </li>
+              <li class="list-inline-item">
+                <a href="https://github.com/alphafan">
+                <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                </span>
+                </a>
+              </li>
+            </ul>
+            <p class="copyright text-muted">Copyright &copy; Yufan's Website 2017</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <!-- Bootstrap core JavaScript -->
+    <script src="../vendor/jquery/jquery.min.js"></script>
+    <script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom scripts for this template -->
+    <script src="../js/clean-blog.min.js"></script>
+    <!-- Rainbow Python -->
+    <script src="../js/rainbow.min.js"></script>
+    <script src="../js/rainbow.python.js"></script>
+  </body>
+</html>
