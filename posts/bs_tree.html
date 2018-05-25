@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Yufan's Blog - DS 二叉搜索树操作集</title>
+    <!-- Icon -->
+    <link rel="icon" type="image/png" href="/img/icon.png">
+    <!-- Bootstrap core CSS -->
+    <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom fonts for this template -->
+    <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href='https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+    <!-- Rainbow css for the code -->
+    <link href="../css/rainbow/monokai.css" rel="stylesheet" type="text/css">
+    <!-- Custom styles for this template -->
+    <link href="../css/clean-blog.min.css" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+      <div class="container">
+        <a class="navbar-brand" href="/index.html">Yufan Zheng</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+        Menu
+        <i class="fa fa-bars"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/index.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/about.html">About</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/blogs.html">Blogs</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/contact.html">Contact</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <!-- Page Header -->
+    <header class="masthead" style="background-image: url('../img/blogs/bs_tree/bg.jpeg')">
+      <div class="overlay"></div>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <div class="post-heading">
+              <h1>[DS] 二叉搜索树操作集</h1>
+              <br>
+              <h2 class="subheading">二叉树搜索树 Binary Search Tree 的各种操作的 Python 实现</h2>
+              <span class="meta">Posted by <a href="/about.html">Yufan Zheng</a> on May 18, 2018</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+    <!-- Post Content -->
+    <article>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <p>闲来无事，整理一下二叉搜索树的各种操作全集吧。以后准备面试的时候，也可以有个参考，不用到处找了。</p>
+            <h2 class="section-heading">BST Model</h2>
+            <p>树的节点模型，和二叉树模型。</p>
+              <pre><code data-language="python">class TNode(object):
+
+    def __init__(self, value, left=None, right=None):
+        self.value = value
+        self.left = left
+        self.right = right
+
+    def __repr__(self):
+        return str(self.value)
+
+
+class BTree(object):
+
+    def __init__(self, root: TNode = None):
+        self.root = root
+...</code></pre>
+            <p>树的节点包括，左节点和右节点，还有存储在节点的值大小。树有唯一的 member variable，就是根节点。</p>
+            <h2 class="section-heading">Tree Traversal</h2>
+            <p>前序遍历</p>
+            <pre><code data-language="python">...
+    def preOrder(self):
+        if self.root is None:
+            return
+        stack = [self.root]
+        while stack:
+            node = stack.pop()
+            print(node, end=' ')
+            if node.right:
+                stack.append(node.right)
+            if node.left:
+                stack.append(node.left)
+        print()
+
+    def preOrderRec(self):
+        root = self.root
+        self._preOrderRec(root)
+        print()
+
+    def _preOrderRec(self, root: TNode):
+        if root:
+            print(root, end=' ')
+            self._preOrderRec(root.left)
+            self._preOrderRec(root.right)
+...</code></pre>
+              <p>中序遍历</p>
+              <pre><code data-language="python">...
+    def inOrder(self):
+        if self.root is None:
+            return
+        node, stack = self.root, []
+        while node or stack:
+            while node:
+                stack.append(node)
+                node = node.left
+            if stack:
+                node = stack.pop()
+                print(node, end=' ')
+                node = node.right
+
+    def inOrderRec(self):
+        root = self.root
+        self._inOrderRec(root)
+        print()
+
+    def _inOrderRec(self, root: TNode):
+        if root:
+            self._inOrderRec(root.left)
+            print(root, end=' ')
+            self._inOrderRec(root.right)       
+...</code></pre>
+             <p>后序遍历</p>
+             <pre><code data-language="python">...
+    def postOrder(self):
+        if self.root is None:
+            return
+        prev, stack = None, [self.root]
+        while stack:
+            curr = stack[-1]
+            # 3 conditions to visit current node
+            #   - Current node has no child
+            #   - Current node's right child has just been visited
+            #   - Current node's left child has just been visited and right child is None
+            if curr.left is None and curr.right is None or \
+                prev is not None and curr.right == prev or \
+                prev is not None and curr.left == prev and curr.right is None:
+                node = stack.pop()
+                prev = node
+                print(node, end=' ')
+            else:
+                if curr.right:
+                    stack.append(curr.right)
+                if curr.left:
+                    stack.append(curr.left)
+        print()
+
+    def postOrderRec(self):
+        root = self.root
+        self._postOrderRec(root)
+        print()
+
+    def _postOrderRec(self, root: TNode):
+        if root:
+            self._postOrderRec(root.left)
+            self._postOrderRec(root.right)
+            print(root, end=' ')
+...</code></pre>
+              <p>层级遍历</p>
+              <pre><code data-language="python">...
+    def levelOrder(self):
+        if self.root is None:
+            return
+        currLevel, nextLevel = [self.root], []
+        while currLevel:
+            node = currLevel.pop()
+            print(node, end=' ')
+            if node.right:
+                nextLevel.append(node.right)
+            if node.left:
+                nextLevel.append(node.left)
+            if len(currLevel) == 0:
+                currLevel, nextLevel = nextLevel, currLevel
+                print()
+...</code></pre>
+             <h2 class="section-heading">Insert / Delete / Search</h2>
+             <p>插入节点</p>
+             <pre><code data-language="python">...
+    def insert(self, node: TNode):
+        if node is None:
+            return
+        self.root = self._insertRec(self.root, node)
+
+    def _insertRec(self, root: TNode, node: TNode):
+        if root is None or root.value == node.value:
+            return node
+        if root.value > node.value:
+            root.left = self._insertRec(root.left, node)
+        if root.value < node.value:
+            root.right = self._insertRec(root.right, node)
+        return root
+...</code></pre>
+             <p>删除节点</p>
+             <pre><code data-language="python">...
+    def delete(self, node: TNode):
+        if self.root is None or node is None:
+            return
+        self._delete(self.root, node)
+
+    def _delete(self, root: TNode, node: TNode):
+        if root is None:
+            raise Exception('Try to delete a non-existing value.')
+        if root.value > node.value:
+            root.left = self._delete(root.left, node)
+        elif root.value < node.value:
+            root.right = self._delete(root.right, node)
+        else:
+            if root.left is None:
+                root = root.right
+            elif root.right is None:
+                root = root.left
+            else:
+                minValueNode = self.minValueNode(root.right)
+                root.value = minValueNode.value
+                root.right = self._delete(root.right, minValueNode)
+        return root
+
+    def minValueNode(self, root: TNode):
+        if root is None:
+            return root
+        while root.left:
+            root = root.left
+        return root             
+...</code></pre>
+             <p>查找节点</p>
+             <pre><code data-language="python">...
+    def search(self, node: TNode):
+        return self._search(self.root, node)
+
+    def _search(self, root: TNode, node: TNode):
+        if root is None or node is None:
+            return False
+        if root.value == node.value:
+            return True
+        if root.value > node.value:
+            return self._search(root.left, node)
+        if root.value < node.value:
+            return self._search(root.right, node)
+...</code></pre>
+             <h2 class="section-heading">Node Path / Lowest Common Ancestor </h2>
+             <p>到节点的路径</p>
+             <pre><code data-language="python">...
+    def pathToNode(self, node: TNode):
+        if node is not None:
+            return self._pathToNode(self.root, node, [self.root])
+
+    def _pathToNode(self, root: TNode, node: TNode, path: list):
+        if root is None:
+            return
+        if root.value == node.value:
+            return path
+        if root.value > node.value:
+            newpath = self._pathToNode(root.left, node, path + [root.left])
+            if newpath is not None:
+                return newpath
+        if root.value < node.value:
+            newpath = self._pathToNode(root.right, node, path + [root.right])
+            if newpath is not None:
+                return newpath
+...</code></pre>
+             <p>两个节点的最低的共同祖先</p>
+             <pre><code data-language="python">...
+    def lowestCommonAncestor(self, node1: TNode, node2: TNode):
+        path1 = self.pathToNode(node1)
+        path2 = self.pathToNode(node2)
+        if path1 is None or path2 is None:
+            return
+        index = 0
+        while index < len(path1) and index < len(path2):
+            if path1[index] != path2[index]:
+                break
+            index += 1
+        return path1[index-1]
+...</code></pre>
+            <h2 class="section-heading">Heights / Check Balance</h2>
+            <p>最小高度</p>
+            <pre><code data-language="python">...
+    def minHeight(self):
+        if self.root is None:
+            return 0
+        return self._minHeight(self.root, 1)
+
+    def _minHeight(self, root: TNode, currHeight):
+        if root.left is None or root.right is None:
+            return currHeight
+        return min(self._minHeight(root.left, currHeight+1),
+                   self._minHeight(root.right, currHeight+1))
+...</code></pre>
+            <p>最大高度</p>
+            <pre><code data-language="python">...
+    def maxHeight(self):
+        if self.root is None:
+            return 0
+        return self._maxHeight(self.root, 0)
+
+    def _maxHeight(self, root: TNode, currHeight):
+        if root is None:
+            return currHeight
+        if root.left is None:
+            return self._maxHeight(root.right, currHeight+1)
+        if root.right is None:
+            return self._maxHeight(root.left, currHeight+1)
+        return max(self._maxHeight(root.left, currHeight+1),
+                   self._maxHeight(root.right, currHeight+1))
+...</code></pre>
+            <p>判断树是否平衡</p>
+            <pre><code data-language="python">...
+    def isBalance(self):
+        if self.maxHeight() - self.minHeight() <= 1:
+            return True
+        return False
+...</code></pre>
+            <h2 class="section-heading">Build Tree From Two Traversal Lists</h2>
+            <p>哪些情况可以构建出一个二叉树来</p>
+            <ul>
+                <li>前序 + 中序 -- 可以</li>
+                <li>后序 + 中序 -- 可以</li>
+                <li>前序 + 后序 -- 不可以</li>
+            </ul>
+            <p>前序 + 中序构建二叉树</p>
+            <pre><code data-language="python">...
+    def fromPreOrderAndInOrder(self, preorder: list, inorder: list):
+        self.root = self._fromPreOrderAndInOrder(preorder, inorder)
+
+    def _fromPreOrderAndInOrder(self, preorder: list, inorder: list):
+        if inorder:
+            idx = inorder.index(preorder.pop(0))
+            root = TNode(inorder[idx])
+            root.left = self._fromPreOrderAndInOrder(preorder, inorder[:idx])
+            root.right = self._fromPreOrderAndInOrder(preorder, inorder[idx+1:])
+            return root
+...</code></pre>
+             <p>后序 + 中序构建二叉树</p>
+             <pre><code data-language="python">...
+    def fromInOrderAndPostOrder(self, inorder: list, postorder: list):
+        self.root = self._fromPreOrderAndInOrder(inorder, postorder)
+
+    def _fromInOrderAndPostOrder(self, inorder: list, postorder: list):
+        if inorder:
+            idx = inorder.index(postorder.pop())
+            root = TNode(inorder[idx])
+            root.right = self._fromInOrderAndPostOrder(inorder[:idx], postorder)
+            root.right = self._fromInOrderAndPostOrder(inorder[idx+1:], postorder)
+            return root
+...</code></pre>
+            <h2 class="section-heading">Binary Search Tree -> Sorted Double Linked List</h2>
+            <p>将二叉搜索树转换成排序好了的双向链表</p>
+            <pre><code data-language="python">...
+class ListNode(object):
+
+    def __init__(self, value, pre=None, nxt=None):
+        self.value = value
+        self.pre = pre
+        self.nxt = nxt
+
+    def __repr__(self):
+        return str(self.value)
+...
+class BTree(object):
+...
+    def toDoubleLinkedList(self):
+        self._head, self._prev = None, None
+        self._inorderConvert(self.root)
+        return self._head
+
+    _head, _prev = None, None
+
+    def _inorderConvert(self, root: TNode):
+        if root:
+            self._inorderConvert(root.left)
+            # Do some stuff here
+            if self._head is None:
+                self._head = self._prev = ListNode(root.value)
+            else:
+                if self._head == self._prev:
+                    self._head.nxt = root
+                    self._prev = root
+                    self._prev.pre = self._head
+                else:
+                    self._prev.nxt = root
+                    tmp = self._prev
+                    self._prev = root
+                    self._prev.pre = tmp
+            self._inorderConvert(root.right)
+...</code></pre>
+         <h2 class="section-heading">At The End</h2>
+         <p>这是我之前在准备面试的时候，刷数据结构，还有刷各种 LeetCode 的题目时，写下的代码，今天整理了一下。</p>
+         <p>完整代码的连接在<a href="https://github.com/alphafan/Data_Structure_And_Algorithms/blob/master/tree/binary_tree.py">这里。</a></p>
+         <p>还有一个更全面的 Python Data Structure / Algorithms 的合集，在<a href="https://github.com/alphafan/Data_Structure_And_Algorithms">这个地方</a>。喜欢的话，可以给个 star 哦。</p>
+          </div>    
+        </div>
+      </div>
+    </article>
+    <hr>
+    <!-- Footer -->
+    <footer>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <ul class="list-inline text-center">
+              <li class="list-inline-item">
+                <a href="#">
+                <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                </span>
+                </a>
+              </li>
+              <li class="list-inline-item">
+                <a href="#">
+                <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
+                </span>
+                </a>
+              </li>
+              <li class="list-inline-item">
+                <a href="https://github.com/alphafan">
+                <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                </span>
+                </a>
+              </li>
+            </ul>
+            <p class="copyright text-muted">Copyright &copy; Yufan's Website 2017</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <!-- Bootstrap core JavaScript -->
+    <script src="../vendor/jquery/jquery.min.js"></script>
+    <script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom scripts for this template -->
+    <script src="../js/clean-blog.min.js"></script>
+    <!-- Rainbow Python -->
+    <script src="../js/rainbow.min.js"></script>
+    <script src="../js/rainbow.python.js"></script>
+  </body>
+</html></html>

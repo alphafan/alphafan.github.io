@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Yufan's Blog - CV 常见 CNN 模型合集和基于 TensorFlow 的实现 - Part II</title>
+    <!-- Icon -->
+    <link rel="icon" type="image/png" href="/img/icon.png">
+    <!-- Bootstrap core CSS -->
+    <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom fonts for this template -->
+    <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href='https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+    <!-- Rainbow css for the code -->
+    <link href="../css/rainbow/monokai.css" rel="stylesheet" type="text/css">
+    <!-- Custom styles for this template -->
+    <link href="../css/clean-blog.min.css" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+      <div class="container">
+        <a class="navbar-brand" href="/index.html">Yufan Zheng</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+        Menu
+        <i class="fa fa-bars"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/index.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/about.html">About</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/blogs.html">Blogs</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/contact.html">Contact</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <!-- Page Header -->
+    <header class="masthead" style="background-image: url('../img/blogs/famous_cnn/bg.png')">
+      <div class="overlay"></div>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <div class="post-heading">
+              <h1>[CV] 常见 CNN 模型合集和基于 TensorFlow 的实现 - Part II</h1>
+              <br>
+              <h2 class="subheading">介绍 VGG，GoogLeNet 模型，并附上简单易懂的基于 TensorFlow 的实现代码</h2>
+              <span class="meta">Posted by <a href="/about.html">Yufan Zheng</a> on May 25, 2018</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+    <!-- Post Content -->
+    <article>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <p>这是 CNN 系列的第二篇，前面介绍了 LeNet5 和 AlexNet，所介绍的都是具有hua意义的网络。这一期介绍的 GoogLeNet 和 VGG 也是具有很重要的意义的，有意思的是这两个网络均是 2014 同期发表出来的，分别是当时 ImageNet 的第一和第二名的模型。其中 VGG 网络获得了 ImageNet 定位的第一和分类的第二。不得不说 2014 年是 CNN 的丰收年。</p>
+            <p>如果说 “ 深度 ” 学习， 从 LeNet5 和 AlexNet 的身上，并没有感觉出来网络的深度，因为分别只有 5 和 8 层。但是这一次介绍的 GoogLeNet 和 VGG 的层数都开始有增加了，开始感觉到了 “ 深度 ” 的意味了。</p>
+            <p>还是老样子，不想听我咯嗦的。可以直接读源码去。</p>
+            <p><a class="text-danger" href="https://github.com/alphafan/famous-cnn-models">源码传送门</a>。</p>
+            <h2 class="section-heading">VGG（Simonyan and Zisseman, 2014）</h2>
+            <p>首先来看一下 VGG-19 模型的层次关系图，来直观的感受一下深度学习中 “ 深度 ” 的含义。</p>
+            <div class="text-center">
+               <img class="img-fluid" src="../img/blogs/famous_cnn/vgg-model">
+             </div>
+             <p>（si。。。 倒吸一口凉气，welcome to the world of DEEP learning）</p>
+            <p>不难从上图中看出 VGG 的特点就是四个字：“ 更小、更深 ”。</p>
+            <ul>
+              <li><b>更小</b> ： VGG 清一色使用 3 x 3 卷积。因为卷积不仅涉及到计算量，还影响到感受野。前者关系到是否方便部署到移动端、是否能满足实时处理、是否易于训练等，后者关系到参数更新、特征图的大小、特征是否提取的足够多、模型的复杂度和参数量等等。</li>
+              <li><b>更深</b> ： VGG 提出 了 16 层网络和 19 层网络等更深的层次结构，并且取得了更好的效果，16 层的 VGG 网络 top-5 的 error rate 为 7.3%，而 8 层的 AlexNet 网络 top-5 的 error rate 为 15.3%，不得不说这是一个大的飞跃。</li>
+            </ul>
+            <p>需要注意的是，VGG 有许多种不同的网络模型，且深度不一，其中效果最好的是 VGG-16 和 VGG-19.（即是最深的两个模型）</p>
+             <div class="text-center">
+               <img class="img-fluid" src="../img/blogs/famous_cnn/vgg_2.jpg">
+             </div>
+            <h2 class="section-heading">Why Small Kernel?</h2>
+            <p>既然说到了 VGG 清一色用小卷积核，结合作者和自己的观点，这里整理出小卷积核比用大卷积核的两点优势：</p>
+            <ul>
+              <li><b>更大的视域能力。</b>多的卷积核的使用可使决策函数更加具有辨别能力，此外就卷积本身的作用而言，3 x 3 比 7 x 7 更能捕获特征的变化：3 x 3 的 9 个格子，最中间的格子是一个感受野中心，可以捕获上下左右以及斜对角的特征变化。主要在于 3 个堆叠起来后，三个 3 x 3 近似一个 7 x 7。</li>
+              <br>
+              <div class="text-center">
+                <img class="img-fluid" src="../img/blogs/famous_cnn/775533">
+              </div>
+              <p></p>
+              <li><b>更多的非线性函数</b>。同样的卷积效果， 7 x 7 变成了 3 x 3 后，网络深了两层，且多出了两个非线性 ReLU 函数，使得判决函数更加具有判断性，对于不同类别的区分能力更强。</li>
+              <div class="text-center">
+               <img class="img-fluid" src="../img/blogs/famous_cnn/3_3.png">
+              </div>
+              <p></p>
+              <li><b>需要训练的参数变少了。</b>相比 5 x 5 、7 x 7 和 11 x 11 的大卷积核， 3 x 3 明显地减少了参数量。比方 input channel 数和 output channel 数均为 C，那么 3 层 conv3 x 3 卷积所需要的卷积层参数是：3 x ( C x 3 x 3 x C ) = 27 C ^ 2，而一层conv7 x 7 卷积所需要的卷积层参数是：C x 7 x 7 x C = 49 C ^ 2。conv7 x 7 的卷积核参数比 conv3 x 3 多了 ( 49 - 27 ) / 27 x 100% ≈ 81%。</li>
+            </ul>
+            <h2 class="section-heading">Pre-Trained VGG Model</h2>
+            <p>由于 VGG 优良的性能，很多大赛均将 VGG 模型训练出来的结果作为 benchmark 来看新算法，新模型的效果。但是 VGG 那 100 多 million 的参数数量仍然是让人望而却步，适用于 ImageNet 的 VGG 模型，是在 4 个GPU 上训练了 3 - 4 周才得到较好的结果的。如果算上不停的实验，参数调优，真实的训练过程所需的时间会乘以 5 - 10 倍不止。</p>
+            <p>有没有方法能加快这个训练过程呢？答案是肯定的。</p>
+            <p>前面说到过 VGG 的优势在于超强的特征提取能力，所以我们可以做出以下假定，VGG 的卷积层，池化层，所做的事情都是进行特征提取，后面的全连接层，才是做的分类的任务。</p>
+            <div class="text-center">
+               <img class="img-fluid" src="../img/blogs/famous_cnn/pretrained.png">
+              </div>
+            <p>基于上面的假设，我们能做的事情就是，直接拿一个在别的项目上训练好了的模型参数，导入到新的任务中，但只是修改后面的分类器的参数（全连接层的权重矩阵和偏移变量，上图中的蓝色部分）。如此一来，需要训练的参数的数量大幅减少，训练也快了许多倍。</p>
+            <p>事实上，有很多人都是这么做的，最后发现效果都还不错。</p>
+            <p>网上有很多地方均可以下载到这些 pre trained model 的权重文件。</p>
+            <ul>
+              <li><a class="text-danger" href="http://www.vlfeat.org/matconvnet/pretrained/">MatCovNet</a></li>
+              <li><a class="text-danger" href="https://www.kaggle.com/keras/vgg16">Kaggle VGG 16</a></li>
+              <li><a class="text-danger" href="https://gist.github.com/baraldilorenzo/07d7802847aaad0a35d3">Example of how to use pre-trained model in Keras</a></li>
+            </ul>
+             <h2 class="section-heading">GoogLeNet (Christian Szegedy)</h2>
+             <p>GoogLeNet 是 2014 年 ImageNet 的图像分类大赛的冠军。同样的，还是先来看看模型长啥样子吧。</p>
+          </div>
+        </div>
+      </div>
+    </article>
+    <hr>
+    <!-- Footer -->
+    <footer>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <ul class="list-inline text-center">
+              <li class="list-inline-item">
+                <a href="#">
+                <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                </span>
+                </a>
+              </li>
+              <li class="list-inline-item">
+                <a href="#">
+                <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
+                </span>
+                </a>
+              </li>
+              <li class="list-inline-item">
+                <a href="https://github.com/alphafan">
+                <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                </span>
+                </a>
+              </li>
+            </ul>
+            <p class="copyright text-muted">Copyright &copy; Yufan's Website 2017</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <!-- Bootstrap core JavaScript -->
+    <script src="../vendor/jquery/jquery.min.js"></script>
+    <script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom scripts for this template -->
+    <script src="../js/clean-blog.min.js"></script>
+    <!-- Rainbow Python -->
+    <script src="../js/rainbow.min.js"></script>
+    <script src="../js/rainbow.python.js"></script>
+  </body>
+</html></html>

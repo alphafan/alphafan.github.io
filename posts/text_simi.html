@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Yufan's Blog - NLP 单词相似度 Word Semantic Similarity</title>
+      
+    <!-- Icon -->
+    <link rel="icon" type="image/png" href="/img/icon.png">
+
+    <!-- Bootstrap core CSS -->
+    <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom fonts for this template -->
+    <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href='https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+    
+    <!-- Rainbow css for the code -->
+    <link href="../css/rainbow/monokai.css" rel="stylesheet" type="text/css">
+
+    <!-- Custom styles for this template -->
+    <link href="../css/clean-blog.min.css" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+      <div class="container">
+        <a class="navbar-brand" href="/index.html">Yufan Zheng</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          Menu
+          <i class="fa fa-bars"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/index.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/about.html">About</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/blogs.html">Blogs</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/contact.html">Contact</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Page Header -->
+    <header class="masthead" style="background-image: url('../img/blogs/text_simi/bg.jpg')">
+      <div class="overlay"></div>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <div class="post-heading">
+              <h1>[NLP] 单词相似度 Word Semantic Similarity</h1>
+              <br>
+              <h2 class="subheading">介绍几种衡量单词相似度的方法，以及 Python 实现</h2>
+              <span class="meta">Posted by <a href="/about.html">Yufan Zheng</a> on May 13, 2017</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Post Content -->
+    <article>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <p>第一次接触到 Word Similarity，都不是在正儿八经 NLP 的课堂，或者是 NLP 的研究和工作中，而是在我的恩师 Gabriel Kepeklian 的语义网的课堂上。当时是为了介绍本体 Ontology 的概念，首先提到了一个叫做 WordNet 的具有层级关系结构的东西，当然，当时的我根本就无法理解 Ontology 是做什么用的，但是 WordNet 确给我留下了深刻的印象，这种语言学家呕心沥血的产物，在 NLP 的发展中不知道提供了多大的帮助。</p>
+            <p>经常看到有人说，做 AI 的只需要关注 2013 年之后的论文即可，现在的趋势也都是向着 DL 在发展，大家都在追求着模型的复杂度，似乎一切都要拿神经网络来做，而且网络越深，越复杂越好。虽然确实很多情况下，确实是如此，可是我总是觉着靠着碰运气一般的调参，生拉硬套数学公式想要让深度学习看上去更合理的做法，只能表现出没有真正理论在后面支持的 Deep Learning 的羸弱。所以，我在关注着 DL 发展的同时，从来不会松懈对传统机器学习方法的学习，而往往这些传统的方法，能让我更惊叹数学的魅力。</p>
+            <p>好吧，扯远了，回归正题，来看一下在实际操作中，单词的相似度是如何被衡量的吧。</p>
+            <h2 class="section-heading">WordNet Based</h2>
+            <p>首先还是来介绍一下 WordNet 到底是一个什么东西吧。实际上很简单，</p>
+          </div>
+        </div>
+      </div>
+    </article>
+    
+    <hr>
+
+    <!-- Footer -->
+    <footer>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <ul class="list-inline text-center">
+              <li class="list-inline-item">
+                <a href="#">
+                  <span class="fa-stack fa-lg">
+                    <i class="fa fa-circle fa-stack-2x"></i>
+                    <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                  </span>
+                </a>
+              </li>
+              <li class="list-inline-item">
+                <a href="#">
+                  <span class="fa-stack fa-lg">
+                    <i class="fa fa-circle fa-stack-2x"></i>
+                    <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
+                  </span>
+                </a>
+              </li>
+              <li class="list-inline-item">
+                <a href="https://github.com/alphafan">
+                  <span class="fa-stack fa-lg">
+                    <i class="fa fa-circle fa-stack-2x"></i>
+                    <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                  </span>
+                </a>
+              </li>
+            </ul>
+            <p class="copyright text-muted">Copyright &copy; Yufan's Website 2017</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="../vendor/jquery/jquery.min.js"></script>
+    <script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom scripts for this template -->
+    <script src="../js/clean-blog.min.js"></script>
+    
+    <!-- Rainbow Python -->
+    <script src="../js/rainbow.min.js"></script>
+    <script src="../js/rainbow.python.js"></script>
+  </body>
+
+</html>
