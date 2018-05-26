@@ -108,7 +108,7 @@
             <p>前面说到过 VGG 的优势在于超强的特征提取能力，所以我们可以做出以下假定，VGG 的卷积层，池化层，所做的事情都是进行特征提取，后面的全连接层，才是做的分类的任务。</p>
             <div class="text-center">
                <img class="img-fluid" src="../img/blogs/famous_cnn/pretrained.png">
-              </div>
+            </div>
             <p>基于上面的假设，我们能做的事情就是，直接拿一个在别的项目上训练好了的模型参数，导入到新的任务中，但只是修改后面的分类器的参数（全连接层的权重矩阵和偏移变量，上图中的蓝色部分）。如此一来，需要训练的参数的数量大幅减少，训练也快了许多倍。</p>
             <p>事实上，有很多人都是这么做的，最后发现效果都还不错。</p>
             <p>网上有很多地方均可以下载到这些 pre trained model 的权重文件。</p>
@@ -118,7 +118,58 @@
               <li><a class="text-danger" href="https://gist.github.com/baraldilorenzo/07d7802847aaad0a35d3">Example of how to use pre-trained model in Keras</a></li>
             </ul>
              <h2 class="section-heading">GoogLeNet (Christian Szegedy)</h2>
-             <p>GoogLeNet 是 2014 年 ImageNet 的图像分类大赛的冠军。同样的，还是先来看看模型长啥样子吧。</p>
+             <p>GoogLeNet 是 2014 年 ImageNet 的图像分类大赛的冠军。GoogLeNet 非常的厉害，为什么这么说呢？因为它实现了 6.67％ 的 Top-5 错误率！ 这与人类的表现非常接近，挑战的组织者在评估时证明，这种正确率实际上很难做到，并且需要一些人工训练才能击败 GoogLeNet 的准确性。人类专家（Andrej Karpathy），在经过几天的培训后，才能够达到 5.1％（single模式）和 3.6％（ensemble模式）的前5位错误率。</p>
+             <p>在正式的介绍 GoogLeNet 前，先介绍一个对 GoogLeNet 的出现有着重要推动作用的网络:</p>
+             <ul>
+               <li><b>Network in Network (Min Lin, 2013)</b></li>
+             </ul>
+             <p> 2013年年尾，Min Lin 提出了在卷积后，再跟一个 1x1 的卷积核对图像进行卷积的做法，这就是 Network In Network 的核心思想了。NiN 在每次卷积完之后使用，目的是为了在进入下一层的时候合并更多的特征参数。同样 NiN 层也是违背了 LeNet5 的设计原则（浅层网络使用大的卷积核），但却有效地合并卷积特征，减少网络参数、同样的内存可以存储更大的网络。</p>
+             <p>根据 Min Lin 的 NiN 论文，他们说这个“网络的网络”（NiN）能够提高 CNN 的局部感知区域。例如没有NiN的当前卷积是这样的：3x3 256 [conv] -> [maxpooling]，当增加了NiN之后的卷积是这样的：3x3 256 [conv] -> 1x1 256 [conv] -> [maxpooling]。</p>
+             <div class="text-center">
+               <img class="img-fluid" src="../img/blogs/famous_cnn/nin.jpg">
+             </div>
+             <p>MLP多层感知的厉害之处就在于它把卷积特征结合起来成为一个更复杂的组合，这个思想将会在后面 ResNet 和 Inception 中用到。</p>
+             <h2 class="section-heading">Inception</h2>
+             <p> GoogLeNet 又被称为 Inception-v1，那么 inception 到底是个什么东西呢？</p>
+             <div class="text-center">
+               <img class="img-fluid" src="../img/blogs/famous_cnn/inception1.png">
+             </div>
+             <p>如果我们将 GoogLeNet 中的一些单元放大的话，就会发现有这么一个一分为四，四合而为一的结构，这个结构就是 Inception 。</p>
+             <p>那么这一种结构有什么好处呢？简单来说，有以下这么些好处。</p>
+             <ul>
+               <li><b>1. 并行的进行不同视域大小的特征抽取。</b>通俗点来说，我想做卷积，但是不知道这里是 1 x 1 的卷积好，还是 3 x 3 还是 5 x 5，不知道用哪个好的话，怎么办呢？那就一起用呗，于是就出现了下图这个 4 个并行路径的情况。</li>
+               <div class="text-center">
+                 <img class="img-fluid" src="../img/blogs/famous_cnn/naive-inception.png">
+               </div>
+               <li><b>2. 更少的参数数量。</b>那么细心的观众，可能发现了，真实的 GoogLeNet 中的 Inception 模块好像多了些东西？多了些什么呢？多的其实是一些 1 x 1 的卷积层，就像 VGG 中介绍的一样，小的卷积核先铺垫一遍后，可以做到很好的减少计算量的作用。相比于 AlexNet，GoogLeNet 的层次从 8 层增加到了 25 层，但是计算的参数数量却从 60 millions 降到了 4 millions。</li>
+               <div class="text-center">
+                 <img class="img-fluid" src="../img/blogs/famous_cnn/inception2.png">
+               </div>
+               <p>为了直观的看一下，到底是怎么减少计算量的，这里附上李飞飞在 Stanford 上课时的课件。</p>
+               <div class="text-center">
+                 <img class="img-fluid" src="../img/blogs/famous_cnn/comp1.png">
+               </div>
+               <div class="text-center">
+                 <img class="img-fluid" src="../img/blogs/famous_cnn/comp2.png">
+               </div>
+               <p>不难看出，简单一个 1 x 1 的卷积层，使得计算量从 854M 减少到了 358M。</p>
+               <li><b>3. Inception 具有更强的提取 feature 的能力。</b>由于 1 x 1 卷积只有一个参数，相当于对原始 feature map 做了一个 scale，并且这个 scale 还是训练学出来的，无疑会对识别精度有提升。</li>
+             </ul>
+             <h2 class="section-heading">GoogLeNet Architecture</h2>
+             <div class="text-center">
+               <img class="img-fluid" src="../img/blogs/famous_cnn/googlenet-ar.png">
+             </div>
+             <p>瞄一眼这个 GoogLeNet 的结构吧。这个图，在你自己动手实现这个网络的时候，很有用。（别问我怎么知道的。。。）</p>
+             <h2 class="section-heading">Auxiliary Layer</h2>
+             <p>Auxiliary Layer 是从 GoogLeNet 中茬出来的一部分，大概是从第四部分的几个 Inception Module 中出来了两个中间分类的结果。</p>
+             <div class="text-center">
+               <img class="img-fluid" src="../img/blogs/famous_cnn/auxiliary.png">
+             </div>
+             <p>他们的作用是，为了平衡 loss。三个 classification loss（包括最后的主体输出），都会加入到梯度下降的计算中。</p>
+             <h2 class="section-heading">At The End</h2>
+             <p>好吧，这篇应该是我写博客以来，最长的一篇了。从图片的长度来计算的。</p>
+             <p>（> - <）</p>
+             <p>Welcome to the world of  '''DEEP LEARNING'''!!!</p>
           </div>
         </div>
       </div>
