@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Yufan's Blog - CV 常见 CNN 模型合集和基于 TensorFlow 的实现 - Part III</title>
+    <!-- Icon -->
+    <link rel="icon" type="image/png" href="/img/icon.png">
+    <!-- Bootstrap core CSS -->
+    <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom fonts for this template -->
+    <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href='https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+    <!-- Rainbow css for the code -->
+    <link href="../css/rainbow/monokai.css" rel="stylesheet" type="text/css">
+    <!-- Custom styles for this template -->
+    <link href="../css/clean-blog.min.css" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+      <div class="container">
+        <a class="navbar-brand" href="/index.html">Yufan Zheng</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+        Menu
+        <i class="fa fa-bars"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/index.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/about.html">About</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/blogs.html">Blogs</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/contact.html">Contact</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <!-- Page Header -->
+    <header class="masthead" style="background-image: url('../img/blogs/famous_cnn/bg.png')">
+      <div class="overlay"></div>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <div class="post-heading">
+              <h1>[CV] 常见 CNN 模型合集和基于 TensorFlow 的实现 - Part III</h1>
+              <br>
+              <h2 class="subheading">介绍 Inception 系列和 ResNet 模型，并附上简单易懂的基于 TensorFlow 的实现代码</h2>
+              <span class="meta">Posted by <a href="/about.html">Yufan Zheng</a> on May 25, 2018</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+    <!-- Post Content -->
+    <article>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <p>上一篇博客介绍了 GoogLeNet， GoogLeNet 有一个另外的名字，叫做 Inception-v1，那么既然有 v1，肯定就会有一个系列紧随其后，这篇博客首先介绍一下 Inception 系列的进化过程，和另外一个牛逼哄哄的网络 ResNet。</p>
+            <h2 class="section-heading">Inception-X Series</h2>
+            <p>不得不说，谷歌的团队就是厉害，在 GoogLeNet 发明不久后，就再接再厉，发表了一个又一个更加厉害的网络。</p>
+            <ul>
+              <li class="text-danger"><b><a class="text-danger" href="https://arxiv.org/abs/1502.03167">Inception-V2</a></b></li>
+            </ul>
+            <p>Inception-V2 是 GoogLeNet 的改良版，与第一个版本相比，它的主要优化总结起来有两个：</p>
+            <ul>
+              <li>1. 加入了 BN 层，减少了 Internal Covariate Shift（内部 neuron 的数据分布发生变化），使每一层的输出都规范化到一个N ( 0 , 1 ) 的高斯，从而增加了模型的鲁棒性，可以以更大的学习速率训练，收敛更快，初始化操作更加随意，同时作为一种正则化技术，可以减少 dropout 层的使用。下图展示了加入了 Batch Normalization 和没有加入 BN 层的产生的权值分布的变化图。</li>
+              <div class="text-center">
+               <img class="img-fluid" src="../img/blogs/famous_cnn/batch_norm.png">
+              </div>
+              <li>2. 用 2 个连续的 3 x 3 conv 替代 inception 模块中的 5 x 5，从而实现网络深度的增加，网络整体深度增加了 9 层，缺点就是增加了 25% 的 weights 和 30% 的计算消耗。</li>
+              <div class="text-center">
+               <img class="img-fluid" src="../img/blogs/famous_cnn/incp2">
+              </div>
+            </ul>
+            <br>
+            <ul>
+              <li class="text-danger"><b><a class="text-danger" href="https://arxiv.org/abs/1512.00567">Inception-V3</a></b></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </article>
+    <hr>
+    <!-- Footer -->
+    <footer>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <ul class="list-inline text-center">
+              <li class="list-inline-item">
+                <a href="#">
+                <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                </span>
+                </a>
+              </li>
+              <li class="list-inline-item">
+                <a href="#">
+                <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
+                </span>
+                </a>
+              </li>
+              <li class="list-inline-item">
+                <a href="https://github.com/alphafan">
+                <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                </span>
+                </a>
+              </li>
+            </ul>
+            <p class="copyright text-muted">Copyright &copy; Yufan's Website 2017</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <!-- Bootstrap core JavaScript -->
+    <script src="../vendor/jquery/jquery.min.js"></script>
+    <script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom scripts for this template -->
+    <script src="../js/clean-blog.min.js"></script>
+    <!-- Rainbow Python -->
+    <script src="../js/rainbow.min.js"></script>
+    <script src="../js/rainbow.python.js"></script>
+  </body>
+</html></html>
