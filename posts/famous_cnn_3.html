@@ -68,9 +68,9 @@
         <div class="row">
           <div class="col-lg-8 col-md-10 mx-auto">
             <p>上一篇博客介绍了 GoogLeNet， GoogLeNet 有一个另外的名字，叫做 Inception-v1，那么既然有 v1，肯定就会有一个系列紧随其后，这篇博客首先介绍一下 Inception 系列的进化过程，和另外一个牛逼哄哄的网络 ResNet。</p>
-            <h2 class="section-heading"><a class="text-danger" href="https://arxiv.org/abs/1502.03167">Inception-V2</a></h2>
+            <h2 class="section-heading"><a href="https://arxiv.org/abs/1502.03167">Inception-V2</a></h2>
             <p>不得不说，谷歌的团队就是厉害，在 GoogLeNet 发明后，不停的对它进行改良，发表了一个又一个更加厉害的网络。</p>
-            <p>Inception-V2 是 GoogLeNet 的改良版，与第一个版本相比，它的主要变化总结起来有两个：</p>
+            <p>Inception-V2 是 GoogLeNet 的第一个改良版，与前一个版本相比，它的主要变化总结起来有两个：</p>
             <ul>
               <li>1. 加入了 BN （Batch Normalization）层，增加了这一层的好处有：
               <ul>
@@ -91,7 +91,7 @@
             <div class="text-center">
                <img class="img-fluid" src="../img/blogs/famous_cnn/incep2.png">
             </div>
-            <h2 class="section-heading"><a class="text-danger" href="https://arxiv.org/abs/1512.00567">Inception-V3</a></h2>
+            <h2 class="section-heading"><a href="https://arxiv.org/abs/1512.00567">Inception-V3</a></h2>
             <p>Inception-V3 网络，主要在 V2 的基础上，提出了卷积分解（Factorization）的概念，为什么要提出这个概念呢？主要是为了在保持特征提取性能的同事，减少计算量。</p>
             <p>那么卷积分解（Factorization），具体是怎么做的呢？看下面两个例子。</p>
             <p>1. 对于 “ 大 ” 的卷积核，例如下图的 5 x 5 的卷积核，将其转换成两个 3 x 3 的卷积核，这样，需要计算的参数量就是之前的 18 / 25。</p>
