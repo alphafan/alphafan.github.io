@@ -55,8 +55,8 @@
             <div class="post-heading">
               <h1>[CV] 常见 CNN 模型合集和基于 TensorFlow 的实现 - Part III</h1>
               <br>
-              <h2 class="subheading">介绍 Inception 系列和 ResNet 模型，并附上简单易懂的基于 TensorFlow 的实现代码</h2>
-              <span class="meta">Posted by <a href="/about.html">Yufan Zheng</a> on May 25, 2018</span>
+              <h2 class="subheading">介绍 Inception-V2, Inception-V3 和 ResNet 模型，并附上简单易懂的基于 TensorFlow 的实现代码</h2>
+              <span class="meta">Posted by <a href="/about.html">Yufan Zheng</a> on May 29, 2018</span>
             </div>
           </div>
         </div>
@@ -131,95 +131,154 @@
             <p>注意到，Inception-V3 相比于 GoogLeNet，层数达到了 42 层，是原来的 2.5 倍，已经深到作者都无法在 paper 中画出来了，只能靠粗略的简图概略结构了。（GoogLeNet 的论文中是有它的完整层次结构的。）</p>
             <h2 class="section-heading"><a href="https://arxiv.org/abs/1512.03385">ResNet</a></h2>
             <p>这里先不介绍 Inception-V4， 因为要理解 Inception-v4 的话，必须要先弄明白 ResNet 的概念，因为实际上 Inception-V4 主要就是看到ResNet觉得挺好，就拿来和 Inception 模块结合一下，加 shortcut。</p>
-            <div>
-              <div class="RichText ztext Post-RichText">
-                <p><b>欢迎交流与转载，文章会同步发布在公众号：机器学习算法全栈工程师(Jeemy110)</b></p>
-                <h2>引言</h2>
-                <p>深度残差网络（Deep residual network, ResNet）的提出是CNN图像史上的一件里程碑事件，让我们先看一下ResNet在ILSVRC和COCO 2015上的战绩：</p>
-                <figure>
-                  <noscript><img src="https://pic1.zhimg.com/v2-5e98ec97def099a4e6fb6b7ce3b1d460_b.jpg" data-size="normal" data-rawwidth="534" data-rawheight="233" class="origin_image zh-lightbox-thumb" width="534" data-original="https://pic1.zhimg.com/v2-5e98ec97def099a4e6fb6b7ce3b1d460_r.jpg"></noscript>
-                  <img src="https://pic1.zhimg.com/80/v2-5e98ec97def099a4e6fb6b7ce3b1d460_hd.jpg" data-size="normal" data-rawwidth="534" data-rawheight="233" class="origin_image zh-lightbox-thumb lazy" width="534" data-original="https://pic1.zhimg.com/v2-5e98ec97def099a4e6fb6b7ce3b1d460_r.jpg" data-actualsrc="https://pic1.zhimg.com/v2-5e98ec97def099a4e6fb6b7ce3b1d460_b.jpg">
-                  <figcaption>图1 ResNet在ILSVRC和COCO 2015上的战绩</figcaption>
-                </figure>
-                <p>ResNet取得了5项第一，并又一次刷新了CNN模型在ImageNet上的历史：</p>
-                <figure>
-                  <noscript><img src="https://pic1.zhimg.com/v2-606573bdaaa97de6b8b10fb00f76d29a_b.jpg" data-size="normal" data-rawwidth="486" data-rawheight="260" class="origin_image zh-lightbox-thumb" width="486" data-original="https://pic1.zhimg.com/v2-606573bdaaa97de6b8b10fb00f76d29a_r.jpg"></noscript>
-                  <img src="https://pic1.zhimg.com/80/v2-606573bdaaa97de6b8b10fb00f76d29a_hd.jpg" data-size="normal" data-rawwidth="486" data-rawheight="260" class="origin_image zh-lightbox-thumb lazy" width="486" data-original="https://pic1.zhimg.com/v2-606573bdaaa97de6b8b10fb00f76d29a_r.jpg" data-actualsrc="https://pic1.zhimg.com/v2-606573bdaaa97de6b8b10fb00f76d29a_b.jpg">
-                  <figcaption>图2 ImageNet分类Top-5误差</figcaption>
-                </figure>
-                <p>ResNet的作者<a href="https://link.zhihu.com/?target=http%3A//kaiminghe.com/" class=" wrap external" target="_blank" rel="nofollow noreferrer" data-za-detail-view-id="1043">何凯明</a>也因此摘得CVPR2016最佳论文奖，当然何博士的成就远不止于此，感兴趣的可以去搜一下他后来的辉煌战绩。那么ResNet为什么会有如此优异的表现呢？其实ResNet是解决了深度CNN模型难训练的问题，从图2中可以看到14年的VGG才19层，而15年的ResNet多达152层，这在网络深度完全不是一个量级上，所以如果是第一眼看这个图的话，肯定会觉得ResNet是靠深度取胜。事实当然是这样，但是ResNet还有架构上的trick，这才使得网络的深度发挥出作用，这个trick就是残差学习（Residual learning）。下面详细讲述ResNet的理论及实现。</p>
-                <h2>深度网络的退化问题</h2>
-                <p>从经验来看，网络的深度对模型的性能至关重要，当增加网络层数后，网络可以进行更加复杂的特征模式的提取，所以当模型更深时理论上可以取得更好的结果，从图2中也可以看出网络越深而效果越好的一个实践证据。但是更深的网络其性能一定会更好吗？实验发现深度网络出现了退化问题（Degradation problem）：网络深度增加时，网络准确度出现饱和，甚至出现下降。这个现象可以在图3中直观看出来：56层的网络比20层网络效果还要差。这不会是过拟合问题，因为56层网络的训练误差同样高。我们知道深层网络存在着梯度消失或者爆炸的问题，这使得深度学习模型很难训练。但是现在已经存在一些技术手段如BatchNorm来缓解这个问题。因此，出现深度网络的退化问题是非常令人诧异的。</p>
-                <figure>
-                  <noscript><img src="https://pic3.zhimg.com/v2-dcf5688dad675cbe8fb8be243af5e1fd_b.jpg" data-size="normal" data-rawwidth="602" data-rawheight="197" class="origin_image zh-lightbox-thumb" width="602" data-original="https://pic3.zhimg.com/v2-dcf5688dad675cbe8fb8be243af5e1fd_r.jpg"></noscript>
-                  <img src="https://pic3.zhimg.com/80/v2-dcf5688dad675cbe8fb8be243af5e1fd_hd.jpg" data-size="normal" data-rawwidth="602" data-rawheight="197" class="origin_image zh-lightbox-thumb lazy" width="602" data-original="https://pic3.zhimg.com/v2-dcf5688dad675cbe8fb8be243af5e1fd_r.jpg" data-actualsrc="https://pic3.zhimg.com/v2-dcf5688dad675cbe8fb8be243af5e1fd_b.jpg">
-                  <figcaption>图3 20层与56层网络在CIFAR-10上的误差</figcaption>
-                </figure>
-                <h2>残差学习</h2>
-                <p>深度网络的退化问题至少说明深度网络不容易训练。但是我们考虑这样一个事实：现在你有一个浅层网络，你想通过向上堆积新层来建立深层网络，一个极端情况是这些增加的层什么也不学习，仅仅复制浅层网络的特征，即这样新层是恒等映射（Identity mapping）。在这种情况下，深层网络应该至少和浅层网络性能一样，也不应该出现退化现象。好吧，你不得不承认肯定是目前的训练方法有问题，才使得深层网络很难去找到一个好的参数。</p>
-                <p>这个有趣的假设让何博士灵感爆发，他提出了残差学习来解决退化问题。对于一个堆积层结构（几层堆积而成）当输入为 <img src="https://www.zhihu.com/equation?tex=x" alt="x" eeimg="1"> 时其学习到的特征记为 <img src="https://www.zhihu.com/equation?tex=H%28x%29" alt="H(x)" eeimg="1"> ，现在我们希望其可以学习到残差 <img src="https://www.zhihu.com/equation?tex=F%28x%29%3DH%28x%29-x" alt="F(x)=H(x)-x" eeimg="1"> ，这样其实原始的学习特征是 <img src="https://www.zhihu.com/equation?tex=F%28x%29%2Bx" alt="F(x)+x" eeimg="1"> 。之所以这样是因为残差学习相比原始特征直接学习更容易。当残差为0时，此时堆积层仅仅做了恒等映射，至少网络性能不会下降，实际上残差不会为0，这也会使得堆积层在输入特征基础上学习到新的特征，从而拥有更好的性能。残差学习的结构如图4所示。这有点类似与电路中的“短路”，所以是一种短路连接（shortcut connection）。</p>
-                <figure>
-                  <noscript><img src="https://pic4.zhimg.com/v2-252e6d9979a2a91c2d3033b9b73eb69f_b.jpg" data-size="normal" data-rawwidth="407" data-rawheight="219" class="content_image" width="407"></noscript>
-                  <img src="https://pic4.zhimg.com/80/v2-252e6d9979a2a91c2d3033b9b73eb69f_hd.jpg" data-size="normal" data-rawwidth="407" data-rawheight="219" class="content_image lazy" width="407" data-actualsrc="https://pic4.zhimg.com/v2-252e6d9979a2a91c2d3033b9b73eb69f_b.jpg">
-                  <figcaption>图4 残差学习单元</figcaption>
-                </figure>
-                <p>为什么残差学习相对更容易，从直观上看残差学习需要学习的内容少，因为残差一般会比较小，学习难度小点。不过我们可以从数学的角度来分析这个问题，首先残差单元可以表示为：</p>
-                <p><img src="https://www.zhihu.com/equation?tex=%5Cbegin%7Balign%7D+%26+%7B%7By%7D_%7Bl%7D%7D%3Dh%28%7B%7Bx%7D_%7Bl%7D%7D%29%2BF%28%7B%7Bx%7D_%7Bl%7D%7D%2C%7B%7BW%7D_%7Bl%7D%7D%29+%5C%5C+%26+%7B%7Bx%7D_%7Bl%2B1%7D%7D%3Df%28%7B%7By%7D_%7Bl%7D%7D%29+%5C%5C+%5Cend%7Balign%7D+" alt="\begin{align} &amp; {{y}_{l}}=h({{x}_{l}})+F({{x}_{l}},{{W}_{l}}) \\ &amp; {{x}_{l+1}}=f({{y}_{l}}) \\ \end{align} " eeimg="1"> </p>
-                <p>其中 <img src="https://www.zhihu.com/equation?tex=x_%7Bl%7D" alt="x_{l}" eeimg="1"> 和 <img src="https://www.zhihu.com/equation?tex=x_%7Bl%2B1%7D" alt="x_{l+1}" eeimg="1"> 分别表示的是第 <img src="https://www.zhihu.com/equation?tex=l" alt="l" eeimg="1"> 个残差单元的输入和输出，注意每个残差单元一般包含多层结构。 <img src="https://www.zhihu.com/equation?tex=F" alt="F" eeimg="1"> 是残差函数，表示学习到的残差，而 <img src="https://www.zhihu.com/equation?tex=h%28x_%7Bl%7D%29%3Dx_%7Bl%7D" alt="h(x_{l})=x_{l}" eeimg="1"> 表示恒等映射， <img src="https://www.zhihu.com/equation?tex=f" alt="f" eeimg="1"> 是ReLU激活函数。基于上式，我们求得从浅层 <img src="https://www.zhihu.com/equation?tex=l" alt="l" eeimg="1"> 到深层 <img src="https://www.zhihu.com/equation?tex=L" alt="L" eeimg="1"> 的学习特征为：</p>
-                <p><img src="https://www.zhihu.com/equation?tex=%7B%7Bx%7D_%7BL%7D%7D%3D%7B%7Bx%7D_%7Bl%7D%7D%2B%5Csum%5Climits_%7Bi%3Dl%7D%5E%7BL-1%7D%7BF%28%7B%7Bx%7D_%7Bi%7D%7D%7D%2C%7B%7BW%7D_%7Bi%7D%7D%29" alt="{{x}_{L}}={{x}_{l}}+\sum\limits_{i=l}^{L-1}{F({{x}_{i}}},{{W}_{i}})" eeimg="1"> </p>
-                <p>利用链式规则，可以求得反向过程的梯度：</p>
-                <p><img src="https://www.zhihu.com/equation?tex=%5Cfrac%7B%5Cpartial+loss%7D%7B%5Cpartial+%7B%7Bx%7D_%7Bl%7D%7D%7D%3D%5Cfrac%7B%5Cpartial+loss%7D%7B%5Cpartial+%7B%7Bx%7D_%7BL%7D%7D%7D%5Ccdot+%5Cfrac%7B%5Cpartial+%7B%7Bx%7D_%7BL%7D%7D%7D%7B%5Cpartial+%7B%7Bx%7D_%7Bl%7D%7D%7D%3D%5Cfrac%7B%5Cpartial+loss%7D%7B%5Cpartial+%7B%7Bx%7D_%7BL%7D%7D%7D%5Ccdot+%5Cleft%28+1%2B%5Cfrac%7B%5Cpartial+%7D%7B%5Cpartial+%7B%7Bx%7D_%7BL%7D%7D%7D%5Csum%5Climits_%7Bi%3Dl%7D%5E%7BL-1%7D%7BF%28%7B%7Bx%7D_%7Bi%7D%7D%2C%7B%7BW%7D_%7Bi%7D%7D%29%7D+%5Cright%29" alt="\frac{\partial loss}{\partial {{x}_{l}}}=\frac{\partial loss}{\partial {{x}_{L}}}\cdot \frac{\partial {{x}_{L}}}{\partial {{x}_{l}}}=\frac{\partial loss}{\partial {{x}_{L}}}\cdot \left( 1+\frac{\partial }{\partial {{x}_{L}}}\sum\limits_{i=l}^{L-1}{F({{x}_{i}},{{W}_{i}})} \right)" eeimg="1"> </p>
-                <p>式子的第一个因子 <img src="https://www.zhihu.com/equation?tex=%5Cfrac%7B%5Cpartial+loss%7D%7B%5Cpartial+%7B%7Bx%7D_%7BL%7D%7D%7D" alt="\frac{\partial loss}{\partial {{x}_{L}}}" eeimg="1"> 表示的损失函数到达 <img src="https://www.zhihu.com/equation?tex=L" alt="L" eeimg="1"> 的梯度，小括号中的1表明短路机制可以无损地传播梯度，而另外一项残差梯度则需要经过带有weights的层，梯度不是直接传递过来的。残差梯度不会那么巧全为-1，而且就算其比较小，有1的存在也不会导致梯度消失。所以残差学习会更容易。要注意上面的推导并不是严格的证明。</p>
-                <h2>ResNet的网络结构</h2>
-                <p>ResNet网络是参考了VGG19网络，在其基础上进行了修改，并通过短路机制加入了残差单元，如图5所示。变化主要体现在ResNet直接使用stride=2的卷积做下采样，并且用global average pool层替换了全连接层。ResNet的一个重要设计原则是：当feature map大小降低一半时，feature map的数量增加一倍，这保持了网络层的复杂度。从图5中可以看到，ResNet相比普通网络每两层间增加了短路机制，这就形成了残差学习，其中虚线表示feature map数量发生了改变。图5展示的34-layer的ResNet，还可以构建更深的网络如表1所示。从表中可以看到，对于18-layer和34-layer的ResNet，其进行的两层间的残差学习，当网络更深时，其进行的是三层间的残差学习，三层卷积核分别是1x1，3x3和1x1，一个值得注意的是隐含层的feature map数量是比较小的，并且是输出feature map数量的1/4。</p>
-                <figure>
-                  <noscript><img src="https://pic3.zhimg.com/v2-7cb9c03871ab1faa7ca23199ac403bd9_b.jpg" data-size="normal" data-rawwidth="469" data-rawheight="1077" class="origin_image zh-lightbox-thumb" width="469" data-original="https://pic3.zhimg.com/v2-7cb9c03871ab1faa7ca23199ac403bd9_r.jpg"></noscript>
-                  <img src="https://pic3.zhimg.com/80/v2-7cb9c03871ab1faa7ca23199ac403bd9_hd.jpg" data-size="normal" data-rawwidth="469" data-rawheight="1077" class="origin_image zh-lightbox-thumb lazy" width="469" data-original="https://pic3.zhimg.com/v2-7cb9c03871ab1faa7ca23199ac403bd9_r.jpg" data-actualsrc="https://pic3.zhimg.com/v2-7cb9c03871ab1faa7ca23199ac403bd9_b.jpg">
-                  <figcaption>图5 ResNet网络结构图</figcaption>
-                </figure>
-                <figure>
-                  <noscript><img src="https://pic4.zhimg.com/v2-1dfd4022d4be28392ff44c49d6b4ed94_b.jpg" data-size="normal" data-rawwidth="554" data-rawheight="242" class="origin_image zh-lightbox-thumb" width="554" data-original="https://pic4.zhimg.com/v2-1dfd4022d4be28392ff44c49d6b4ed94_r.jpg"></noscript>
-                  <img src="https://pic4.zhimg.com/80/v2-1dfd4022d4be28392ff44c49d6b4ed94_hd.jpg" data-size="normal" data-rawwidth="554" data-rawheight="242" class="origin_image zh-lightbox-thumb lazy" width="554" data-original="https://pic4.zhimg.com/v2-1dfd4022d4be28392ff44c49d6b4ed94_r.jpg" data-actualsrc="https://pic4.zhimg.com/v2-1dfd4022d4be28392ff44c49d6b4ed94_b.jpg">
-                  <figcaption>表1 不同深度的ResNet</figcaption>
-                </figure>
-                <p>下面我们再分析一下残差单元，ResNet使用两种残差单元，如图6所示。左图对应的是浅层网络，而右图对应的是深层网络。对于短路连接，当输入和输出维度一致时，可以直接将输入加到输出上。但是当维度不一致时（对应的是维度增加一倍），这就不能直接相加。有两种策略：（1）采用zero-padding增加维度，此时一般要先做一个downsamp，可以采用strde=2的pooling，这样不会增加参数；（2）采用新的映射（projection shortcut），一般采用1x1的卷积，这样会增加参数，也会增加计算量。短路连接除了直接使用恒等映射，当然都可以采用projection shortcut。</p>
-                <figure>
-                  <noscript><img src="https://pic3.zhimg.com/v2-0892e5423616c30f69ded61111b111c0_b.jpg" data-size="normal" data-rawwidth="566" data-rawheight="203" class="origin_image zh-lightbox-thumb" width="566" data-original="https://pic3.zhimg.com/v2-0892e5423616c30f69ded61111b111c0_r.jpg"></noscript>
-                  <img src="https://pic3.zhimg.com/80/v2-0892e5423616c30f69ded61111b111c0_hd.jpg" data-size="normal" data-rawwidth="566" data-rawheight="203" class="origin_image zh-lightbox-thumb lazy" width="566" data-original="https://pic3.zhimg.com/v2-0892e5423616c30f69ded61111b111c0_r.jpg" data-actualsrc="https://pic3.zhimg.com/v2-0892e5423616c30f69ded61111b111c0_b.jpg">
-                  <figcaption>图6 不同的残差单元</figcaption>
-                </figure>
-                <p>作者对比18-layer和34-layer的网络效果，如图7所示。可以看到普通的网络出现退化现象，但是ResNet很好的解决了退化问题。</p>
-                <figure>
-                  <noscript><img src="https://pic4.zhimg.com/v2-ac88d9e118e3a85922188daba84f7efd_b.jpg" data-size="normal" data-rawwidth="710" data-rawheight="220" class="origin_image zh-lightbox-thumb" width="710" data-original="https://pic4.zhimg.com/v2-ac88d9e118e3a85922188daba84f7efd_r.jpg"></noscript>
-                  <img src="https://pic4.zhimg.com/80/v2-ac88d9e118e3a85922188daba84f7efd_hd.jpg" data-size="normal" data-rawwidth="710" data-rawheight="220" class="origin_image zh-lightbox-thumb lazy" width="710" data-original="https://pic4.zhimg.com/v2-ac88d9e118e3a85922188daba84f7efd_r.jpg" data-actualsrc="https://pic4.zhimg.com/v2-ac88d9e118e3a85922188daba84f7efd_b.jpg">
-                  <figcaption>图7 18-layer和34-layer的网络效果</figcaption>
-                </figure>
-                <p>最后展示一下ResNet网络与其他网络在ImageNet上的对比结果，如表2所示。可以看到ResNet-152其误差降到了4.49%，当采用集成模型后，误差可以降到3.57%。</p>
-                <figure>
-                  <noscript><img src="https://pic3.zhimg.com/v2-0a2c8a209a221817f91c1f1728327beb_b.jpg" data-size="normal" data-rawwidth="528" data-rawheight="330" class="origin_image zh-lightbox-thumb" width="528" data-original="https://pic3.zhimg.com/v2-0a2c8a209a221817f91c1f1728327beb_r.jpg"></noscript>
-                  <img src="https://pic3.zhimg.com/80/v2-0a2c8a209a221817f91c1f1728327beb_hd.jpg" data-size="normal" data-rawwidth="528" data-rawheight="330" class="origin_image zh-lightbox-thumb lazy" width="528" data-original="https://pic3.zhimg.com/v2-0a2c8a209a221817f91c1f1728327beb_r.jpg" data-actualsrc="https://pic3.zhimg.com/v2-0a2c8a209a221817f91c1f1728327beb_b.jpg">
-                  <figcaption>表2 ResNet与其他网络的对比结果</figcaption>
-                </figure>
-                <p>说一点关于残差单元题外话，上面我们说到了短路连接的几种处理方式，其实作者在<a href="https://link.zhihu.com/?target=https%3A//arxiv.org/abs/1603.05027" class=" wrap external" target="_blank" rel="nofollow noreferrer" data-za-detail-view-id="1043">文献[2]</a>中又对不同的残差单元做了细致的分析与实验，这里我们直接抛出最优的残差结构，如图8所示。改进前后一个明显的变化是采用pre-activation，BN和ReLU都提前了。而且作者推荐短路连接采用恒等变换，这样保证短路连接不会有阻碍。感兴趣的可以去读读这篇文章。</p>
-                <figure>
-                  <noscript><img src="https://pic4.zhimg.com/v2-4e0bf37ecad2f306fe09d32a2d37d908_b.jpg" data-size="normal" data-rawwidth="729" data-rawheight="377" class="origin_image zh-lightbox-thumb" width="729" data-original="https://pic4.zhimg.com/v2-4e0bf37ecad2f306fe09d32a2d37d908_r.jpg"></noscript>
-                  <img src="https://pic4.zhimg.com/80/v2-4e0bf37ecad2f306fe09d32a2d37d908_hd.jpg" data-size="normal" data-rawwidth="729" data-rawheight="377" class="origin_image zh-lightbox-thumb lazy" width="729" data-original="https://pic4.zhimg.com/v2-4e0bf37ecad2f306fe09d32a2d37d908_r.jpg" data-actualsrc="https://pic4.zhimg.com/v2-4e0bf37ecad2f306fe09d32a2d37d908_b.jpg">
-                  <figcaption>图8 改进后的残差单元及效果</figcaption>
-                </figure>
-                <h2>ResNet的TensorFlow实现</h2>
-                <p>这里给出ResNet50的TensorFlow实现，模型的实现参考了<a href="https://link.zhihu.com/?target=https%3A//github.com/KaimingHe/deep-residual-networks" class=" wrap external" target="_blank" rel="nofollow noreferrer" data-za-detail-view-id="1043">Caffe版本</a>的实现，核心代码如下：</p>
-                <p>完整实现可以参见<a href="https://link.zhihu.com/?target=https%3A//github.com/xiaohu2015/DeepLearning_tutorials/" class=" wrap external" target="_blank" rel="nofollow noreferrer" data-za-detail-view-id="1043">GitHub</a>。</p>
-                <h2>总结 </h2>
-                <p>ResNet通过残差学习解决了深度网络的退化问题，让我们可以训练出更深的网络，这称得上是深度网络的一个历史大突破吧。也许不久会有更好的方式来训练更深的网络，让我们一起期待吧！</p>
-                <h2>参考资料</h2>
-                <ol>
-                  <li><a href="https://link.zhihu.com/?target=https%3A//arxiv.org/abs/1512.03385" class=" wrap external" target="_blank" rel="nofollow noreferrer" data-za-detail-view-id="1043">Deep Residual Learning for Image Recognition</a>.</li>
-                  <li><a href="https://link.zhihu.com/?target=https%3A//arxiv.org/abs/1603.05027" class=" wrap external" target="_blank" rel="nofollow noreferrer" data-za-detail-view-id="1043">Identity Mappings in Deep Residual Networks</a>.</li>
-                  <li><a href="https://link.zhihu.com/?target=http%3A//kaiminghe.com/" class=" wrap external" target="_blank" rel="nofollow noreferrer" data-za-detail-view-id="1043">去膜拜一下大神</a>.</li>
-                </ol>
-                <p><br><b>欢迎交流与转载，文章会同步发布在公众号：机器学习算法全栈工程师(Jeemy110)</b></p>
-              </div>
+            <p>深度残差网络（Deep residual network, ResNet）的提出是CNN图像史上的一件里程碑事件，让我们先看一下ResNet在ILSVRC和COCO 2015上的战绩：</p>
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/famous_cnn/11.jpg">
             </div>
+            <p class="text-center">图1 - ResNet 取得了5项第一，并又一次刷新了 CNN 模型在 ImageNet 上的历史</p>
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/famous_cnn/21.jpg">
+            </div>
+            <p class="text-center">图2 - ImageNet 分类 Top-5 误差</p>
+            <p>ResNet 的作者<a href="https://link.zhihu.com/?target=http%3A//kaiminghe.com/" class="text-danger">何凯明</a>也因此摘得 CVPR2016 最佳论文奖，当然何博士的成就远不止于此，感兴趣的可以去搜一下他后来的辉煌战绩。那么 ResNet 为什么会有如此优异的表现呢？其实 ResNet 是解决了深度 CNN 模型难训练的问题，从图2中可以看到14年的VGG才19层，而 15 年的 ResNet 多达 152 层，这在网络深度完全不是一个量级上，所以如果是第一眼看这个图的话，肯定会觉得 ResNet 是靠深度取胜。事实当然是这样，但是 ResNet 还有架构上的 trick，这才使得网络的深度发挥出作用，这个 trick 就是残差学习（Residual learning）。下面详细讲述 ResNet 的理论及实现。</p>
+            <ul>
+              <li><b>深度网络的退化问题</b></li>
+            </ul>
+            <p>从经验来看，网络的深度对模型的性能至关重要，当增加网络层数后，网络可以进行更加复杂的特征模式的提取，所以当模型更深时理论上可以取得更好的结果，从图2中也可以看出网络越深而效果越好的一个实践证据。但是更深的网络其性能一定会更好吗？实验发现深度网络出现了退化问题（Degradation problem）：网络深度增加时，网络准确度出现饱和，甚至出现下降。这个现象可以在图3中直观看出来：56层的网络比20层网络效果还要差。这不会是过拟合问题，因为56层网络的训练误差同样高。我们知道深层网络存在着梯度消失或者爆炸的问题，这使得深度学习模型很难训练。但是现在已经存在一些技术手段如BatchNorm来缓解这个问题。因此，出现深度网络的退化问题是非常令人诧异的。</p>
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/famous_cnn/31.jpg">
+            </div>
+            <p class="text-center">图3 - 20层与56层网络在CIFAR-10上的误差</p>
+            <ul>
+              <li><b>残差学习</b></li>
+            </ul>
+            <p>深度网络的退化问题至少说明深度网络不容易训练。但是我们考虑这样一个事实：现在你有一个浅层网络，你想通过向上堆积新层来建立深层网络，一个极端情况是这些增加的层什么也不学习，仅仅复制浅层网络的特征，即这样新层是恒等映射（Identity mapping）。在这种情况下，深层网络应该至少和浅层网络性能一样，也不应该出现退化现象。好吧，你不得不承认肯定是目前的训练方法有问题，才使得深层网络很难去找到一个好的参数。</p>
+            <p>这个有趣的假设让何博士灵感爆发，他提出了残差学习来解决退化问题。对于一个堆积层结构（几层堆积而成）当输入为 <img src="https://www.zhihu.com/equation?tex=x" alt="x" eeimg="1"> 时其学习到的特征记为 <img src="https://www.zhihu.com/equation?tex=H%28x%29" alt="H(x)" eeimg="1"> ，现在我们希望其可以学习到残差 <img src="https://www.zhihu.com/equation?tex=F%28x%29%3DH%28x%29-x" alt="F(x)=H(x)-x" eeimg="1"> ，这样其实原始的学习特征是 <img src="https://www.zhihu.com/equation?tex=F%28x%29%2Bx" alt="F(x)+x" eeimg="1"> 。之所以这样是因为残差学习相比原始特征直接学习更容易。当残差为0时，此时堆积层仅仅做了恒等映射，至少网络性能不会下降，实际上残差不会为0，这也会使得堆积层在输入特征基础上学习到新的特征，从而拥有更好的性能。残差学习的结构如图4所示。这有点类似与电路中的“短路”，所以是一种短路连接（shortcut connection）。</p>
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/famous_cnn/41.jpg">
+            </div>
+            <p class="text-center">图4 - 残差学习单元</p>
+            <p>为什么残差学习相对更容易，从直观上看残差学习需要学习的内容少，因为残差一般会比较小，学习难度小点。不过我们可以从数学的角度来分析这个问题，首先残差单元可以表示为：</p>
+            <p class="text-center"><img src="https://www.zhihu.com/equation?tex=%5Cbegin%7Balign%7D+%26+%7B%7By%7D_%7Bl%7D%7D%3Dh%28%7B%7Bx%7D_%7Bl%7D%7D%29%2BF%28%7B%7Bx%7D_%7Bl%7D%7D%2C%7B%7BW%7D_%7Bl%7D%7D%29+%5C%5C+%26+%7B%7Bx%7D_%7Bl%2B1%7D%7D%3Df%28%7B%7By%7D_%7Bl%7D%7D%29+%5C%5C+%5Cend%7Balign%7D+" alt="\begin{align} &amp; {{y}_{l}}=h({{x}_{l}})+F({{x}_{l}},{{W}_{l}}) \\ &amp; {{x}_{l+1}}=f({{y}_{l}}) \\ \end{align} " eeimg="1"> </p>
+            <p>其中 <img src="https://www.zhihu.com/equation?tex=x_%7Bl%7D" alt="x_{l}" eeimg="1"> 和 <img src="https://www.zhihu.com/equation?tex=x_%7Bl%2B1%7D" alt="x_{l+1}" eeimg="1"> 分别表示的是第 <img src="https://www.zhihu.com/equation?tex=l" alt="l" eeimg="1"> 个残差单元的输入和输出，注意每个残差单元一般包含多层结构。 <img src="https://www.zhihu.com/equation?tex=F" alt="F" eeimg="1"> 是残差函数，表示学习到的残差，而 <img src="https://www.zhihu.com/equation?tex=h%28x_%7Bl%7D%29%3Dx_%7Bl%7D" alt="h(x_{l})=x_{l}" eeimg="1"> 表示恒等映射， <img src="https://www.zhihu.com/equation?tex=f" alt="f" eeimg="1"> 是ReLU激活函数。基于上式，我们求得从浅层 <img src="https://www.zhihu.com/equation?tex=l" alt="l" eeimg="1"> 到深层 <img src="https://www.zhihu.com/equation?tex=L" alt="L" eeimg="1"> 的学习特征为：</p>
+            <p class="text-center"><img src="https://www.zhihu.com/equation?tex=%7B%7Bx%7D_%7BL%7D%7D%3D%7B%7Bx%7D_%7Bl%7D%7D%2B%5Csum%5Climits_%7Bi%3Dl%7D%5E%7BL-1%7D%7BF%28%7B%7Bx%7D_%7Bi%7D%7D%7D%2C%7B%7BW%7D_%7Bi%7D%7D%29" alt="{{x}_{L}}={{x}_{l}}+\sum\limits_{i=l}^{L-1}{F({{x}_{i}}},{{W}_{i}})" eeimg="1"> </p>
+            <p>利用链式规则，可以求得反向过程的梯度：</p>
+            <p class="text-center"><img src="https://www.zhihu.com/equation?tex=%5Cfrac%7B%5Cpartial+loss%7D%7B%5Cpartial+%7B%7Bx%7D_%7Bl%7D%7D%7D%3D%5Cfrac%7B%5Cpartial+loss%7D%7B%5Cpartial+%7B%7Bx%7D_%7BL%7D%7D%7D%5Ccdot+%5Cfrac%7B%5Cpartial+%7B%7Bx%7D_%7BL%7D%7D%7D%7B%5Cpartial+%7B%7Bx%7D_%7Bl%7D%7D%7D%3D%5Cfrac%7B%5Cpartial+loss%7D%7B%5Cpartial+%7B%7Bx%7D_%7BL%7D%7D%7D%5Ccdot+%5Cleft%28+1%2B%5Cfrac%7B%5Cpartial+%7D%7B%5Cpartial+%7B%7Bx%7D_%7BL%7D%7D%7D%5Csum%5Climits_%7Bi%3Dl%7D%5E%7BL-1%7D%7BF%28%7B%7Bx%7D_%7Bi%7D%7D%2C%7B%7BW%7D_%7Bi%7D%7D%29%7D+%5Cright%29" alt="\frac{\partial loss}{\partial {{x}_{l}}}=\frac{\partial loss}{\partial {{x}_{L}}}\cdot \frac{\partial {{x}_{L}}}{\partial {{x}_{l}}}=\frac{\partial loss}{\partial {{x}_{L}}}\cdot \left( 1+\frac{\partial }{\partial {{x}_{L}}}\sum\limits_{i=l}^{L-1}{F({{x}_{i}},{{W}_{i}})} \right)" eeimg="1"> </p>
+            <p>式子的第一个因子 <img src="https://www.zhihu.com/equation?tex=%5Cfrac%7B%5Cpartial+loss%7D%7B%5Cpartial+%7B%7Bx%7D_%7BL%7D%7D%7D" alt="\frac{\partial loss}{\partial {{x}_{L}}}" eeimg="1"> 表示的损失函数到达 <img src="https://www.zhihu.com/equation?tex=L" alt="L" eeimg="1"> 的梯度，小括号中的1表明短路机制可以无损地传播梯度，而另外一项残差梯度则需要经过带有weights的层，梯度不是直接传递过来的。残差梯度不会那么巧全为-1，而且就算其比较小，有1的存在也不会导致梯度消失。所以残差学习会更容易。要注意上面的推导并不是严格的证明。</p>
+            <ul>
+              <li><b>直观理解为什么残差学习单元可以防止梯度消失。</b></li>
+            </ul>
+            <p>首先，来看一下为什么会消失。我们知道，神经网络的训练无非就是前向传播和后向传播的过程，既然是传播，传递的过程中，总是会有损耗的，损耗过大，那么后面就接收不到什么东西了，也就更谈不上能学到东西，深度，也就没有了意义。</p>
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/famous_cnn/car.jpg">
+            </div>
+            <p>如上图，左边来了一辆装满了“梯度”商品的货车，来领商品的客人一般都要排队一个个拿才可以，如果排队的人太多，后面的人就没有了。于是这时候派了一个人走了“快捷通道”，到货车上领了一部分“梯度”，直接送给后面的人，这样后面排队的客人就能拿到更多的“梯度”。</p>
+            <ul>
+              <li><b>ResNet的网络结构</b></li>
+            </ul>
+            <p>ResNet网络是参考了VGG19网络，在其基础上进行了修改，并通过短路机制加入了残差单元，如图5所示。变化主要体现在ResNet直接使用stride=2的卷积做下采样，并且用global average pool层替换了全连接层。ResNet的一个重要设计原则是：当feature map大小降低一半时，feature map的数量增加一倍，这保持了网络层的复杂度。从图5中可以看到，ResNet相比普通网络每两层间增加了短路机制，这就形成了残差学习，其中虚线表示feature map数量发生了改变。图5展示的34-layer的ResNet，还可以构建更深的网络如表1所示。从表中可以看到，对于18-layer和34-layer的ResNet，其进行的两层间的残差学习，当网络更深时，其进行的是三层间的残差学习，三层卷积核分别是1x1，3x3和1x1，一个值得注意的是隐含层的feature map数量是比较小的，并且是输出feature map数量的1/4。</p>
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/famous_cnn/51.jpg">
+            </div>
+            <p class="text-center">图5 - ResNet网络结构图</p>
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/famous_cnn/52.jpg">
+            </div>
+            <p class="text-center">表1 - 不同深度的ResNet</p>
+            <p>下面我们再分析一下残差单元，ResNet使用两种残差单元，如图6所示。左图对应的是浅层网络，而右图对应的是深层网络。对于短路连接，当输入和输出维度一致时，可以直接将输入加到输出上。但是当维度不一致时（对应的是维度增加一倍），这就不能直接相加。有两种策略：</p>
+            <ul>
+              <li>1. 采用zero-padding增加维度，此时一般要先做一个downsamp，可以采用strde=2的pooling，这样不会增加参数；</li>
+              <li>2. 采用新的映射（projection shortcut），一般采用1x1的卷积，这样会增加参数，也会增加计算量。短路连接除了直接使用恒等映射，当然都可以采用projection shortcut。</li>
+            </ul>
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/famous_cnn/61.jpg">
+            </div>
+            <p class="text-center">图6 - 不同的残差单元</p>
+            <p>作者对比18-layer和34-layer的网络效果，如图7所示。可以看到普通的网络出现退化现象，但是ResNet很好的解决了退化问题。</p>
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/famous_cnn/71.jpg">
+            </div>
+            <p class="text-center">图7 - 18-layer和34-layer的网络效果</p>
+            <p>最后展示一下ResNet网络与其他网络在ImageNet上的对比结果，如表2所示。可以看到ResNet-152其误差降到了4.49%，当采用集成模型后，误差可以降到3.57%。</p>
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/famous_cnn/81.jpg">
+            </div>
+            <p class="text-center">表2 - ResNet与其他网络的对比结果</p>
+            <p>说一点关于残差单元题外话，上面我们说到了短路连接的几种处理方式，其实作者在<a href="https://link.zhihu.com/?target=https%3A//arxiv.org/abs/1603.05027" target="_blank">文献</a>中又对不同的残差单元做了细致的分析与实验，这里我们直接抛出最优的残差结构，如图8所示。改进前后一个明显的变化是采用pre-activation，BN和ReLU都提前了。而且作者推荐短路连接采用恒等变换，这样保证短路连接不会有阻碍。感兴趣的可以去读读这篇文章。</p>
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/famous_cnn/91.jpg">
+            </div>
+            <p class="text-center">图8 - 改进后的残差单元及效果</p>
+            <h2>Implement ResNet In TensorFlow</h2>
+            <p>这里给出ResNet50的TensorFlow实现，模型的实现参考了<a href="https://link.zhihu.com/?target=https%3A//github.com/KaimingHe/deep-residual-networks" class=" wrap external" target="_blank" rel="nofollow noreferrer" data-za-detail-view-id="1043">Caffe版本</a>的实现，核心代码如下：</p>
+            <pre><code data-language="python">class ResNet50(object):
+            
+    def __init__(self, inputs, num_classes=1000, is_training=True,
+                 scope="resnet50"):
+        self.inputs =inputs
+        self.is_training = is_training
+        self.num_classes = num_classes
+
+        with tf.variable_scope(scope):
+            # construct the model
+            net = conv2d(inputs, 64, 7, 2, scope="conv1") # -> [batch, 112, 112, 64]
+            net = tf.nn.relu(batch_norm(net, is_training=self.is_training, scope="bn1"))
+            net = max_pool(net, 3, 2, scope="maxpool1")  # -> [batch, 56, 56, 64]
+            net = self._block(net, 256, 3, init_stride=1, is_training=self.is_training,
+                              scope="block2")           # -> [batch, 56, 56, 256]
+            net = self._block(net, 512, 4, is_training=self.is_training, scope="block3")
+                                                        # -> [batch, 28, 28, 512]
+            net = self._block(net, 1024, 6, is_training=self.is_training, scope="block4")
+                                                        # -> [batch, 14, 14, 1024]
+            net = self._block(net, 2048, 3, is_training=self.is_training, scope="block5")
+                                                        # -> [batch, 7, 7, 2048]
+            net = avg_pool(net, 7, scope="avgpool5")    # -> [batch, 1, 1, 2048]
+            net = tf.squeeze(net, [1, 2], name="SpatialSqueeze") # -> [batch, 2048]
+            self.logits = fc(net, self.num_classes, "fc6")       # -> [batch, num_classes]
+            self.predictions = tf.nn.softmax(self.logits)
+
+
+    def _block(self, x, n_out, n, init_stride=2, is_training=True, scope="block"):
+        with tf.variable_scope(scope):
+            h_out = n_out // 4
+            out = self._bottleneck(x, h_out, n_out, stride=init_stride,
+                                   is_training=is_training, scope="bottlencek1")
+            for i in range(1, n):
+                out = self._bottleneck(out, h_out, n_out, is_training=is_training,
+                                       scope=("bottlencek%s" % (i + 1)))
+            return out
+
+    def _bottleneck(self, x, h_out, n_out, stride=None, is_training=True, scope="bottleneck"):
+        """ A residual bottleneck unit"""
+        n_in = x.get_shape()[-1]
+        if stride is None:
+            stride = 1 if n_in == n_out else 2
+
+        with tf.variable_scope(scope):
+            h = conv2d(x, h_out, 1, stride=stride, scope="conv_1")
+            h = batch_norm(h, is_training=is_training, scope="bn_1")
+            h = tf.nn.relu(h)
+            h = conv2d(h, h_out, 3, stride=1, scope="conv_2")
+            h = batch_norm(h, is_training=is_training, scope="bn_2")
+            h = tf.nn.relu(h)
+            h = conv2d(h, n_out, 1, stride=1, scope="conv_3")
+            h = batch_norm(h, is_training=is_training, scope="bn_3")
+
+            if n_in != n_out:
+                shortcut = conv2d(x, n_out, 1, stride=stride, scope="conv_4")
+                shortcut = batch_norm(shortcut, is_training=is_training, scope="bn_4")
+            else:
+                shortcut = x
+            return tf.nn.relu(shortcut + h)</code></pre>
+            <p>完整实现可以参见<a href="https://github.com/alphafan/famous-cnn-models/blob/master/resnet50/model.py" class="text-danger" target="_blank">GitHub</a>。</p>
+            <h2>References</h2>
+            <ol>
+              <li><a href="https://link.zhihu.com/?target=https%3A//arxiv.org/abs/1512.03385" class=" wrap external" target="_blank" rel="nofollow noreferrer" data-za-detail-view-id="1043">Deep Residual Learning for Image Recognition</a>.</li>
+              <li><a href="https://link.zhihu.com/?target=https%3A//arxiv.org/abs/1603.05027" class=" wrap external" target="_blank" rel="nofollow noreferrer" data-za-detail-view-id="1043">Identity Mappings in Deep Residual Networks</a>.</li>
+              <li><a href="https://link.zhihu.com/?target=http%3A//kaiminghe.com/" class=" wrap external" target="_blank" rel="nofollow noreferrer" data-za-detail-view-id="1043">去膜拜一下大神</a>.</li>
+              <li><a href="https://www.zhihu.com/question/64494691">到底Resnet在解决一个什么问题呢？</a></li>
+              <li><a href="https://zhuanlan.zhihu.com/p/31852747">你必须要了解的 CNN 模型</a></li>
+            </ol>
           </div>
         </div>
       </div>
