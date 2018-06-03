@@ -100,16 +100,19 @@
             <p>例如，上图中，如果我们是梯度下降的话，我们每一步都会走最正确的下降方向，不会走弯路，那就是图中红色线所表示的走法，如果是随机梯度下降的话，就是紫色线路所代表的走法，他可能会绕一些弯路，但是扭扭曲曲，却还是能朝着最小值的地方走过去。</p>
             <p>注意，往往随机梯度下降，不会刚刚好就找到最小的地方，可能会在最小值附近转来转去的。</p>
             <h2 class="section-heading">Momentum</h2>
-            <p>如果说你在训练的时候，觉得随机梯度下降依然太慢了，怎么办呢？这时，我们就要提到 Momentum 了，它是可以帮助到快速的梯度下降的。</p>
-            <p>大多数训练的过程中，我们会发现学习过程是曲折无比的。为了简化过程来显示，我们只选择了两个维度，实际上，真实的训练过程中，维度更高，这种来回摆动的情况更容易发生。</p>
+            <p>如果说在训练的时候，我们觉得随机梯度下降 SGD 算法依然太慢了，怎么办呢？这时，我们就可以考虑使用 Momentum 了，Momentum 算法它是可以帮助到快速的梯度下降的。</p>
+            <p>在真正进入到算法讲解之前，我们先来大致看一下，在大多数训练的过程中，那些曲折无比的学习过程吧。</p>
             <div class="text-center">
               <img class="img-fluid" src="../img/blogs/grad_desc/7.png">
             </div>
-            <p>例如上图中的梯度下降的例子，这个梯度下降的过程，很像是在某一个轴附近摆来摆去，虽然确实是一直朝着中间的洼地在走着，但是好像来回的摆动确实是浪费了许多步骤，看上去像一个喝醉了的人，晃晃悠悠的向着地低走去。那么 Momentum 就是基于这种情况，做了一些改进。一句话来概括它的特点的话，那就是：计算在梯度下降的方向上，计算一个指数加权平均（ Exponentially weighted average ），利用这个来代替权重更新。</p>
+            <p>例如上图中的梯度下降的例子，这个梯度下降的过程，很像是在某一个轴附近摆来摆去，虽然确实是一直朝着中间的洼地在走着，但是好像来回的摆动确实是浪费了许多步骤，看上去像一个喝醉了的人，晃晃悠悠的向着地低走去。</p>
+            <p>实际上，由于真实的训练过程中，维度远比 2 要高的多，这种无意义的摆动的情况出现的情况，出现的次数非常多。</p>
+            <p>那么 Momentum 就是发现了这种问题，对 SGD 算法做了一些改进。一句话来概括它的特点的话，那就是：计算在梯度下降的方向上，计算一个指数加权平均（ Exponentially weighted average ），利用这个来代替权重更新的方法。</p>
             <div class="text-center">
               <img class="img-fluid" src="../img/blogs/grad_desc/8.png">
             </div>
             <p>用通俗一点的方法来说，就是<b>“如果梯度下降显示，我们在一直朝着某一个方向在下降的方向，我让这个方向的的学习速率快一点，如果梯度下降在某一个方向一直摆来摆去，那么就让这个方向的学习速率慢一点 ”</b>。</p>
+            <p>我们可以先来看一下，Momentum 减少摆动的效果。</p>
             <div class="text-center">
               <img class="img-fluid" src="../img/blogs/grad_desc/9.gif">
             </div>
@@ -118,7 +121,7 @@
               <img class="img-fluid" src="../img/blogs/grad_desc/10.gif">
             </div>
             <p class="text-center">有 Momentum 的 Gradient Descent</p>
-            <p>上图就是我们加入了 Momentum 的梯度下降的变化，可以看到，由于加速了横轴的速度，减慢了纵轴的速度，训练过程中，它的步伐迈的更大，也更正确了，对比原来没有 Momentum，仅仅四步，就离最终的最小值更近了许多。</p>
+            <p>上面两张图，就是我们没有加入，和加入了 Momentum 之后的梯度下降的变化，可以看到，有了 Momentum 之后，算法加速了横轴下降的速度，并减缓了纵轴的摆动的频率，所以在最终的训练过程中，它的步伐迈的更大，也更正确了，对比原来没有 Momentum，仅仅四步，就离最终的最小值更近了许多。</p>
             <h2 class="section-heading">Exponentially Weighted Average</h2>
             <p>如果你只是想知道 Momentum 的大致原理，不想知道 Momentum 的细节的话，那么这一部分你是可以跳过的啦。</p>
             <p>前面我们提到，Momentum 是用到滑动平均来获得平滑波动的效果的。那么什么是滑动平均呢？</p>
@@ -171,7 +174,7 @@
             </div>
             <p>Momentum 还有一个好处，就是可以冲出局部最优解，或者某一些梯度为 0 的地方，这也是因为滑动平均使他带有一定的惯性，能冲出洼地。</p>
             <h2 class="section-heading">Nesterov Accelerated Gradient</h2>
-            <p>Nesterov Momentum 是一个稍有不同的 Momentum 更新版本，最近很流行。在这个版本中，我们首先查看当前动量所指向的点，并计算此时的梯度。如下图所示</p>
+            <p>Nesterov Momentum 是一个稍有不同的 Momentum 更新版本，最近很流行。在这个 Nesterov 中，我们首先查看当前动量所指向的点，然后计算此时的梯度。如下图所示</p>
             <div class="text-center">
               <img class="img-fluid" src="../img/blogs/grad_desc/21.jpeg">
             </div>
@@ -179,7 +182,7 @@
             <div class="text-center">
               <img class="img-fluid" src="../img/blogs/grad_desc/22.png">
             </div>
-            <p>这里我并不打算细说 Nesterov Momentum 了，直接看一个对比图吧。</p>
+            <p>它唯一的区别是 W 变成了 W - Vt，但这里我并不打算细说 Nesterov Momentum 了，我们直接来看一个梯度下降的对比图吧。</p>
             <div class="text-center">
               <img class="img-fluid" src="../img/blogs/grad_desc/23.png">
             </div>
@@ -228,7 +231,7 @@
             </div>
             <p>如果我们这个时候，对比一下 Adam 与其他的梯度下降的算法的话，会发现 Adam 实际上是中和了前两种的，速度比较快，也不容易走偏。</p>
             <h2 class="section-heading">Visualization of Algorithms</h2>
-            <p>以下两个动画（图片来源：Alec Radford）为大多数所提出的优化方法的优化行为提供了一些直觉。在这里也可以看看<a href="http://cs231n.github.io/neural-networks-3/">Karpathy对同样图像的描述</a>，以及所讨论算法的另一个简要概述。</p>
+            <p>下面这个动画（图片来源：Alec Radford）为大多数所提出的优化方法的优化行为提供了一些直觉。在这里也可以看看<a href="http://cs231n.github.io/neural-networks-3/">Karpathy对同样图像的描述</a>，以及所讨论算法的另一个简要概述。</p>
             <p>这张图也算比较老的图了，有一些里面涉及的算法我在这篇博客里没有提到，而我提到的 Adam 它也没有画出来，所以将就着看一下吧。</p>
             <div class="text-center">
               <img class="img-fluid" src="../img/blogs/grad_desc/p1.gif">
