@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Yufan's Blog - Python 在 Docker 上快速部署 Flask App</title>
+    <!-- Icon -->
+    <link rel="icon" type="image/png" href="/img/icon.png">
+    <!-- Bootstrap core CSS -->
+    <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom fonts for this template -->
+    <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href='https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+    <!-- Rainbow css for the code -->
+    <link href="../css/rainbow/monokai.css" rel="stylesheet" type="text/css">
+    <!-- Custom styles for this template -->
+    <link href="../css/clean-blog.min.css" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+      <div class="container">
+        <a class="navbar-brand" href="/index.html">Yufan Zheng</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+        Menu
+        <i class="fa fa-bars"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/index.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/about.html">About</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/blogs.html">Blogs</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/contact.html">Contact</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <!-- Page Header -->
+    <header class="masthead" style="background-image: url('../img/blogs/flask_docker/bg.png')">
+      <div class="overlay"></div>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <div class="post-heading">
+              <h1>[Python] 在 Docker 上快速部署 Flask App</h1>
+              <br>
+              <h2 class="subheading">一步一步的实现在 Docker 上快速部署 Flask App</h2>
+              <span class="meta">Posted by <a href="/about.html">Yufan Zheng</a> on June 30, 2018</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+    <!-- Post Content -->
+    <article>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <p>当我们刚刚开始使用容器时，将 Docker 添加到 Python 和 Flask 开发环境可能会有一点困难。这篇博客，我们快速安装并配置Docker，以便在本地系统上开发Flask Web应用程序。</p>
+            <h2 class="section-heading">Our Tools</h2>
+            <p>本教程是为Python 3编写的。我还没有通过即将被弃用的2.7版本进行测试。Docker for Mac是必要的，我会推荐稳定版本。</p>
+            <p>在Docker容器中，我们将使用：</p>
+            <ul>
+              <li>Python 3, slim-3.6.5 version</li>
+              <li>Flask version 1.0.2</li>
+            </ul>
+            <p>这篇博客中的实例代码可以在<a class="text-danger" href="https://github.com/alphafan/docker-flask-for-mac/tree/master">这里</a>找到。</p>
+            <h2 class="section-heading">Dockerfile</h2>
+            <p>Docker需要知道我们在容器中需要什么，这是 Dockerfile 的作用。</p>
+            <pre><code data-language="bash"># this is an official Python runtime, used as the parent image
+FROM python:3.6.4-slim
+
+# set the working directory in the container to /app
+WORKDIR /app
+
+# add the current directory to the container as /app
+ADD . /app
+
+# execute everyone's favorite pip command, pip install -r
+RUN pip install --trusted-host pypi.python.org -r requirements.txt
+
+# unblock port 80 for the Flask app to run on
+EXPOSE 80
+
+# execute the Flask app
+CMD ["python", "app.py"]</code></pre>
+            <p>保存Dockerfile，以便我们可以使用完整的文件内容运行我们的下一个命令。 在命令行上运行：</p>
+            <pre><code>docker build -t flask .</code></pre>
+            <p>上面的 <code>-t</code> 是为了给我们建立的 image 一个名字。</p>
+            <p>如果构建成功，我们可以使用 <code>docker image ls</code> 命令查看图像。 现在就试试看：</p>
+            <pre><code>REPOSITORY      TAG                 IMAGE ID            CREATED             SIZE
+flask           latest              24045e0464af        2 minutes ago       165MB</code></pre>
+            <p>我们的 image 已准备好作为容器加载了，因此我们可以编写一个快速 Flask 应用程序，我们将通过在容器中运行它来测试环境。</p>
+            <h2 class="section-heading">Coding A Simple Flask App</h2>
+            <p>在当前项目目录中，使用以下内容创建一个名为 app.py 的文件：</p>
+            <pre><code data-language="python">from flask import Flask, Response
+
+
+app = Flask(__name__)
+
+
+@app.route("/")
+def hello():
+    return Response("Hi from your Flask app running in your Docker container!")
+
+
+if __name__ == "__main__":
+    app.run("0.0.0.0", port=80, debug=True)</code></pre>
+            <p>在 app.py 所在的目录中创建一个 requirements.txt 文件：</p>
+            <pre><code>flask==1.0.2</code></pre>
+            <h2 class="section-heading">Running the Container</h2>
+            <p>现在我们将手中的 image 与Python代码一起放入文件中，我们可以使用docker run命令将图像作为容器运行。 执行以下命令，<b>确保将绝对路径替换为自己的目录</b>。</p>
+            <pre><code>docker run -p 5000:80 --volume=/Users/yufan/Documents/workspace/flaskdocker:/app flask</code></pre>
+            <p>然后打开浏览器，localhost:5000 就好啦。</p>
+            <div class="text-center">
+              <img class="img-fluid" src="../img/blogs/flask_docker/img.png">
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+    <hr>
+    <!-- Footer -->
+    <footer>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <ul class="list-inline text-center">
+              <li class="list-inline-item">
+                <a href="#">
+                <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                </span>
+                </a>
+              </li>
+              <li class="list-inline-item">
+                <a href="#">
+                <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
+                </span>
+                </a>
+              </li>
+              <li class="list-inline-item">
+                <a href="https://github.com/alphafan">
+                <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                </span>
+                </a>
+              </li>
+            </ul>
+            <p class="copyright text-muted">Copyright &copy; Yufan's Website 2017</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <!-- Bootstrap core JavaScript -->
+    <script src="../vendor/jquery/jquery.min.js"></script>
+    <script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom scripts for this template -->
+    <script src="../js/clean-blog.min.js"></script>
+    <!-- Rainbow Python -->
+    <script src="../js/rainbow.min.js"></script>
+    <script src="../js/rainbow.python.js"></script>
+  </body>
+</html></html>
