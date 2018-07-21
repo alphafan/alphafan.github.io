@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Yufan's Blog - Algo 最大连续数列和</title>
+    <!-- Icon -->
+    <link rel="icon" type="image/png" href="/img/icon.png">
+    <!-- Bootstrap core CSS -->
+    <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom fonts for this template -->
+    <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href='https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+    <!-- Rainbow css for the code -->
+    <link href="../css/rainbow/monokai.css" rel="stylesheet" type="text/css">
+    <!-- Custom styles for this template -->
+    <link href="../css/clean-blog.min.css" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+      <div class="container">
+        <a class="navbar-brand" href="/index.html">Yufan Zheng</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+        Menu
+        <i class="fa fa-bars"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/index.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/about.html">About</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/blogs.html">Blogs</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/contact.html">Contact</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <!-- Page Header -->
+    <header class="masthead" style="background-image: url('../img/blogs/max_conti_sum/bg.jpg')">
+      <div class="overlay"></div>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <div class="post-heading">
+              <h1>[Algo] 常见面试题：求最大连续子数列的和（ Max Continuous Sum ）</h1>
+              <br>
+              <h2 class="subheading">多种方法一步一步优化求最大连续子数列的和问题</h2>
+              <span class="meta">Posted by <a href="/about.html">Yufan Zheng</a> on July 19, 2018</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+    <!-- Post Content -->
+    <article>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <p>最大连续子序列和问题是个很老的面试题了，最佳的解法是 O(n) 复杂度，当然其中的一些小的地方还是有些值得注意的地方的。这里还是总结两种常见的解法，重点关注最后一种 O(n) 的解法即可。</p>
+            <h2 class="section-heading">Problem Description</h2>
+            <p>问题是这样的：一个整数数组中的元素有正有负，在该数组中找出一个连续子数组，要求该连续子数组中各元素的和最大，这个连续子数组便被称作最大连续子数组。比如数组 [2, 4, -7, 5, 2, -1, 2, -4, 3] 的最大连续子数组为 [5, 2, -1, 2]，最大连续子数组的和为 5 + 2 - 1 + 2 = 8 。</p>
+            <h2 class="section-heading">Divide and Conquer - O(nlogn) Solution</h2>
+            <p>考虑将数组从中间分为两个子数组，则最大子数组必然出现在以下三种情况之一：</p>
+            <ul>
+                <li>1、完全位于左边的数组中。</li>
+                <li>2、完全位于右边的数组中。</li>
+                <li>3、跨越中点，包含左右数组中靠近中点的部分。</li>
+            </ul>
+            <p>递归将左右子数组再分别分成两个数组，直到子数组中只含有一个元素，退出每层递归前，返回上面三种情况中的最大值。实现代码如下：</p>
+            <pre><code data-language="python">""" Find maximum continuous sum in an array O(nlogn)
+
+T(n) = 2 * T(n/2) + O(n)
+
+Divide and conquer
+
+Idea in general:
+max_continuous_sum = max(
+    1. max_continuous_sum_in_the_left,
+    2. max_continuous_sum_in_the_right,
+    3. max_continuous_sum_cross_middle
+)
+"""
+
+
+def max_continuous_sum(nums):
+    if len(nums) == 0:
+        return 0
+    if len(nums) == 1:
+        return max(0, nums[0])
+    left, right = 0, len(nums) - 1
+    middle = int((left+right+1)/2)
+    return max(
+        max_continuous_sum(nums[:middle]),
+        max_continuous_sum(nums[middle+1:]),
+        max_continuous_sum_cross_middle(nums, left, middle, right)
+    )
+
+
+def max_continuous_sum_cross_middle(nums, left, middle, right):
+    left_ward_sum, left_ward_max_sum = 0, 0
+    right_ward_sum, right_ward_max_sum = 0, 0
+    for i in range(middle, left-1, -1):
+        left_ward_sum += nums[i]
+        left_ward_max_sum = max(left_ward_max_sum, left_ward_sum)
+    for i in range(middle, right+1):
+        right_ward_sum += nums[i]
+        right_ward_max_sum = max(right_ward_max_sum, right_ward_sum)
+    return max(left_ward_max_sum, right_ward_max_sum,
+               left_ward_max_sum + right_ward_max_sum - max(nums[middle], 0))</code></pre>
+            <h2 class="section-heading">Kadane’s Algorithm - O(n) Solution</h2>
+            <p>Kadane 算法的简单概念是查找数组的所有正连续段（max_ending_here）。并跟踪所有正片段中的最大和连续片段（max_so_far）。每次我们得到一个正数和它与 max_so_far 比较，如果它大于 max_so_far 的话，就更新 max_so_far。</p>
+            <pre><code data-language="python">""" Find maximum continuous sum in an array
+Algorithm
+# init
+max_so_far = 0
+max_ending_here = -999999999999
+for num in nums:
+    max_ending_here = max(max_ending_here + num, 0)
+    max_so_far = max(max_so_far, max_ending_here)
+------------------------------------------------------------
+array           | 1 | -2 | 3 | 5 | -3 | 1 |  5 | -3 |  7
+------------------------------------------------------------
+max_ending_here | 1 |  0 | 3 | 8 |  5 | 6 | 11 |  8 | 15
+------------------------------------------------------------
+max_so_far      | 1 |  1 | 3 | 8 |  8 | 8 | 11 | 11 | 15
+------------------------------------------------------------
+"""
+
+
+def maximum_continuous_sum(nums):
+    # init
+    max_so_far = 0
+    max_ending_here = 0
+    # iter
+    for num in nums:
+        max_ending_here = max(max_ending_here + num, 0)
+        max_so_far = max(max_so_far, max_ending_here)
+    return max_so_far
+
+
+if __name__ == '__main__':
+    test = [1, -2, 3, 5, -3, 1, 5, -3, 7]
+    print(maximum_continuous_sum(test))</code></pre>
+             <h2 class="section-heading">Reference</h2>
+             <p><a class="text-danger" href="https://github.com/alphafan/exercise_of_introduction_to_algorithm/tree/master/Chapter_4">源码传送门</a>。</p>
+          </div>
+        </div>
+      </div>
+    </article>
+    <hr>
+    <!-- Footer -->
+    <footer>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <ul class="list-inline text-center">
+              <li class="list-inline-item">
+                <a href="#">
+                <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                </span>
+                </a>
+              </li>
+              <li class="list-inline-item">
+                <a href="#">
+                <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
+                </span>
+                </a>
+              </li>
+              <li class="list-inline-item">
+                <a href="https://github.com/alphafan">
+                <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                </span>
+                </a>
+              </li>
+            </ul>
+            <p class="copyright text-muted">Copyright &copy; Yufan's Website 2017</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <!-- Bootstrap core JavaScript -->
+    <script src="../vendor/jquery/jquery.min.js"></script>
+    <script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom scripts for this template -->
+    <script src="../js/clean-blog.min.js"></script>
+    <!-- Rainbow Python -->
+    <script src="../js/rainbow.min.js"></script>
+    <script src="../js/rainbow.python.js"></script>
+  </body>
+</html></html>
