@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Yufan's Blog - Python Flask 的 Gunicorn 的 Dcoker 包装模板</title>
+    <!-- Icon -->
+    <link rel="icon" type="image/png" href="/img/icon.png">
+    <!-- Bootstrap core CSS -->
+    <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom fonts for this template -->
+    <link href="../vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href='https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+    <!-- Rainbow css for the code -->
+    <link href="../css/rainbow/monokai.css" rel="stylesheet" type="text/css">
+    <!-- Custom styles for this template -->
+    <link href="../css/clean-blog.min.css" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+      <div class="container">
+        <a class="navbar-brand" href="/index.html">Yufan Zheng</a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+        Menu
+        <i class="fa fa-bars"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarResponsive">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/index.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/about.html">About</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/blogs.html">Blogs</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/contact.html">Contact</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <!-- Page Header -->
+    <header class="masthead" style="background-image: url('../img/blogs/bs_tree/bg.jpeg')">
+      <div class="overlay"></div>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <div class="post-heading">
+              <h1>[Python] Flask 的 Gunicorn 的 Dcoker 包装模板</h1>
+              <br>
+              <h2 class="subheading">将 Flask 包装成 Gunicorn 的 Docker Container</h2>
+              <span class="meta">Posted by <a href="/about.html">Yufan Zheng</a> on May 18, 2018</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+    <!-- Post Content -->
+    <article>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+              <p>在 Python Web 的开发过程中，经常的我们会因为图方便，使用 flask 这种非常简单并且容易上手的 web server,但  flask 有一个很致命的缺点就是是阻塞的 server，即是说，如果有两个人同时
+              调用 server 的request 的话，server 就会卡住了，返回不了任何东西，为了防止 server 阻塞，一般的解决办法要么是使用 gevent 在外面包一层，或者是使用 gunicorn。</p>
+              <p> Gevent 的 server 实际上仍然还是一个单一 server，但是不再是同时处理就会卡掉了，而是有一个队列的处理，所以处理会变慢，但不会卡。Gunicorn 则会将原先的 server 复制几个，做
+              到真正的并行处理。</p>
+              <h2 class="section-heading">创建一个简单的 flask app</h2>
+              <p>在 requirements.txt 中中加入</p>
+              <pre><code>flask
+eventlet
+gunicorn</code></pre>
+             <p>创建一个简单的 app.py 文件，注意，这里的 host 一定要设定成 ‘0.0.0.0‘，否则可能会有问题。</p>
+             <pre><code  data-language="python">from flask import Flask
+
+app = Flask(__name__)
+
+
+@app.route('/index')
+def index():
+    return 'Hello, world'
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)</code></pre>
+              <h2 class="section-heading">文件结构</h2>
+              <p>在正式的写各种脚本之前，我们首先来看一下项目的文件结构</p>
+              <pre><code>| - bin
+  | - create_image.sh
+  | - run_container.sh
+| - conf
+   | - gunicorn.conf
+   | - supervisor.conf
+| - scripts
+   | - flask.sh
+   | - gunicorn.sh
+   | - kill.sh
+   | - restart.sh
+| - Dockerfile
+| - app.py
+| - requirements.txt  </code></pre>
+            <h2 class="section-heading">启动 flask 的脚本 flask.sh</h2>
+            <pre><code>#!/usr/bin/env bash
+
+cd ../
+export FLASK_APP=app.py
+# export FLASK_DEBUG=FALSE
+flask run --port=5000 --host=0.0.0.0</code></pre>
+             <p>这个脚本会将 app.py 文件中的 app 到处出来，用 flask command 来启动 server。这可以当做一个测试脚本，当你的server 部署上去的时候，
+             如果碰到问题，想知道是自己的server 本身有问题，还是gunicorn 的问题，就需要一个单机测试的脚本在这儿，启动它，看是否 OK。</p>
+             <h2 class="section-heading">启动 gunicorn 的脚本 gunicorn.sh</h2>
+            <pre><code>#!/usr/bin/env bash
+
+# Kill previous process
+bash kill.sh
+# Start Process
+cd ../
+# gunicorn -c conf/gunicorn.conf app:wise_influencer_app
+gunicorn -c conf/gunicorn.conf app:app</code></pre>
+             <p>当 flask 单进程 OK 的时候，就可以考虑 gunicorn 的多进程了，这个里面有提到一个 kill 的 脚本。</p>
+             <pre><code>#!/usr/bin/env bash
+
+# Process Name
+PROCESS=app
+# Kill previous process
+for pid in $(ps aux | grep $PROCESS | awk '{print $2}')
+do
+  if [ "$pid" != "" ]
+  then
+    echo "killing previous process: $pid"
+    kill -9 $pid
+  fi
+done</code></pre>
+           <p> kill 会杀死之前的进程，然后再开始创建。</p>
+           <h2 class="section-heading">重启 gunicorn 的脚本 restart.sh</h2>
+          </div>    
+        </div>
+      </div>
+    </article>
+    <hr>
+    <!-- Footer -->
+    <footer>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-md-10 mx-auto">
+            <ul class="list-inline text-center">
+              <li class="list-inline-item">
+                <a href="#">
+                <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                </span>
+                </a>
+              </li>
+              <li class="list-inline-item">
+                <a href="#">
+                <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
+                </span>
+                </a>
+              </li>
+              <li class="list-inline-item">
+                <a href="https://github.com/alphafan">
+                <span class="fa-stack fa-lg">
+                <i class="fa fa-circle fa-stack-2x"></i>
+                <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                </span>
+                </a>
+              </li>
+            </ul>
+            <p class="copyright text-muted">Copyright &copy; Yufan's Website 2017</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <!-- Bootstrap core JavaScript -->
+    <script src="../vendor/jquery/jquery.min.js"></script>
+    <script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom scripts for this template -->
+    <script src="../js/clean-blog.min.js"></script>
+    <!-- Rainbow Python -->
+    <script src="../js/rainbow.min.js"></script>
+    <script src="../js/rainbow.python.js"></script>
+  </body>
+</html></html>
