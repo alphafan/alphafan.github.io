@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="">
     <meta name="author" content="">
-    <title>Yufan's Blog - Python Flask 的 Gunicorn 的 Dcoker 包装模板</title>
+    <title>Yufan's Blog - Python Flask 的 Gunicorn 的 Dcoker 包装方法</title>
     <!-- Icon -->
     <link rel="icon" type="image/png" href="/img/icon.png">
     <!-- Bootstrap core CSS -->
@@ -47,16 +47,16 @@
       </div>
     </nav>
     <!-- Page Header -->
-    <header class="masthead" style="background-image: url('../img/blogs/bs_tree/bg.jpeg')">
+    <header class="masthead" style="background-image: url('../img/blogs/gunicorn_docker/bg.jpeg')">
       <div class="overlay"></div>
       <div class="container">
         <div class="row">
           <div class="col-lg-8 col-md-10 mx-auto">
             <div class="post-heading">
-              <h1>[Python] Flask 的 Gunicorn 的 Dcoker 包装模板</h1>
+              <h1>[Python] Flask 的 Gunicorn 的 Dcoker 包装方法</h1>
               <br>
-              <h2 class="subheading">将 Flask 包装成 Gunicorn 的 Docker Container</h2>
-              <span class="meta">Posted by <a href="/about.html">Yufan Zheng</a> on May 18, 2018</span>
+              <h2 class="subheading">一步一步的实现将 Flask 包装成 Gunicorn 的 Docker Container</h2>
+              <span class="meta">Posted by <a href="/about.html">Yufan Zheng</a> on August 15, 2018</span>
             </div>
           </div>
         </div>
@@ -67,16 +67,15 @@
       <div class="container">
         <div class="row">
           <div class="col-lg-8 col-md-10 mx-auto">
-              <p>在 Python Web 的开发过程中，经常的我们会因为图方便，使用 flask 这种非常简单并且容易上手的 web server,但  flask 有一个很致命的缺点就是是阻塞的 server，即是说，如果有两个人同时
-              调用 server 的request 的话，server 就会卡住了，返回不了任何东西，为了防止 server 阻塞，一般的解决办法要么是使用 gevent 在外面包一层，或者是使用 gunicorn。</p>
-              <p> Gevent 的 server 实际上仍然还是一个单一 server，但是不再是同时处理就会卡掉了，而是有一个队列的处理，所以处理会变慢，但不会卡。Gunicorn 则会将原先的 server 复制几个，做
-              到真正的并行处理。</p>
+              <p>在 Python Web 的开发过程中，经常的我们会因为图方便，使用 flask 这种非常简单并且容易上手的 web server，但 flask 有一个很致命的缺点就是是阻塞，即是说，如果有两个人同时调用 server 的 request 的话，server 就会卡住了，返回不了任何东西，为了防止阻塞，一般的解决办法要么是使用 gevent 在 flask server 外面包一层，或者是使用 gunicorn。</p>
+              <p> Gevent 的 server 实际上仍然还是一个单一 server，但是不再是同时处理就会卡掉了，而是有一个队列的处理，所以处理会变慢，但不会卡。Gunicorn 则会将原先的 server 复制几个，做到真正的并行处理。</p>
               <h2 class="section-heading">创建一个简单的 flask app</h2>
-              <p>在 requirements.txt 中中加入</p>
+              <p>首先我们需要安装 python 的外部依赖，在 requirements.txt 中中加入</p>
               <pre><code>flask
 eventlet
 gunicorn</code></pre>
-             <p>创建一个简单的 app.py 文件，注意，这里的 host 一定要设定成 ‘0.0.0.0‘，否则可能会有问题。</p>
+             <p>执行<code>pip install -r requirements.txt</code> 来进行安装。</p>
+             <p>创建一个简单的 app.py 文件，注意，这里的 host 一定要设定成 ‘0.0.0.0‘，否则在部署的时候可能会有问题。</p>
              <pre><code  data-language="python">from flask import Flask
 
 app = Flask(__name__)
@@ -89,6 +88,7 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)</code></pre>
+              <p>这个简单的 app.py 实现了一个显示 hello word 的功能。当然，之后你也可以修改加入不同的 API 功能。</p>
               <h2 class="section-heading">文件结构</h2>
               <p>在正式的写各种脚本之前，我们首先来看一下项目的文件结构</p>
               <pre><code>| - bin
@@ -105,6 +105,7 @@ if __name__ == '__main__':
 | - Dockerfile
 | - app.py
 | - requirements.txt  </code></pre>
+            <p>接下来，我们会一个一个的对这些文件还有脚本进行分析和解释。</p>
             <h2 class="section-heading">启动 flask 的脚本 flask.sh</h2>
             <pre><code>#!/usr/bin/env bash
 
@@ -112,10 +113,9 @@ cd ../
 export FLASK_APP=app.py
 # export FLASK_DEBUG=FALSE
 flask run --port=5000 --host=0.0.0.0</code></pre>
-             <p>这个脚本会将 app.py 文件中的 app 到处出来，用 flask command 来启动 server。这可以当做一个测试脚本，当你的server 部署上去的时候，
-             如果碰到问题，想知道是自己的server 本身有问题，还是gunicorn 的问题，就需要一个单机测试的脚本在这儿，启动它，看是否 OK。</p>
+             <p>这个脚本会将 app.py 文件中的 app 导出出来，用 flask command 来启动 server。它可以作为一个测试脚本，当你的 server 部署上去的时候，如果碰到问题，debug 想知道是自己的 server 本身代码有问题，还是 gunicorn 的部署问题，就需要一个单机测试的脚本在这儿，启动 flash.sh，看是否 OK。</p>
              <h2 class="section-heading">启动 gunicorn 的脚本 gunicorn.sh</h2>
-            <pre><code>#!/usr/bin/env bash
+             <pre><code>#!/usr/bin/env bash
 
 # Kill previous process
 bash kill.sh
@@ -123,7 +123,7 @@ bash kill.sh
 cd ../
 # gunicorn -c conf/gunicorn.conf app:wise_influencer_app
 gunicorn -c conf/gunicorn.conf app:app</code></pre>
-             <p>当 flask 单进程 OK 的时候，就可以考虑 gunicorn 的多进程了，这个里面有提到一个 kill 的 脚本。</p>
+             <p>当 flask 单进程 OK 的时候，就可以考虑 gunicorn 的多进程了，首先我们将之前启动的 app 都杀死掉，然后利用 gunicorn 来启动多个核的 server。这个里面有提到一个 kill 的 脚本，它的内容如下：</p>
              <pre><code>#!/usr/bin/env bash
 
 # Process Name
@@ -139,6 +139,84 @@ do
 done</code></pre>
            <p> kill 会杀死之前的进程，然后再开始创建。</p>
            <h2 class="section-heading">重启 gunicorn 的脚本 restart.sh</h2>
+           <p>restart.sh 当中会首先检查和安装 dependency，然后启动 gunicorn。</p>
+           <pre><code>#!/usr/bin/env bash
+
+echo "Checking dependencies with pip..."
+pip install -r ../requirements.txt
+bash gunicorn.sh</code></pre>
+            <p>这一些脚本在创建 container 的时候会用到，同时，当 server 已经部署到 container 当中的时候，你想要通过 interactive 的方式进入到里面去重启 server 或者 debug 的时候，你会发现他们是非常的有用的。</p>
+            <h2 class="section-heading">创建 Dockerfile</h2>
+            <p>Dockerfile 是用来 build 这个 container 会使用的 image 的。我们使用 python 3.6 的 image 作为base。最后利用 supervisor 来进行启动 server。利用 supervisor 的好处是，首先是可以 monitor 当前的状态，然后是在 start container 的时候，就会自动的启动这项 server 的服务了。</p>
+            <pre><code>FROM python:3.6.5-slim
+MAINTAINER Yufan Zheng <zhengyufan@wisers.com>
+LABEL Description="Gunicorn Docker Example"
+
+# Install vim, supervisord and git
+RUN apt-get -y update
+RUN apt-get -y install vim
+RUN apt-get -y install supervisor
+RUN apt-get -y install git
+
+# Make Directory for app
+RUN mkdir /home/gunicorn_docker
+WORKDIR /home/gunicorn_docker
+# Copy code inside
+COPY . /home/gunicorn_docker
+
+# Install requirements
+RUN pip install -r /home/gunicorn_docker/requirements.txt
+
+# Supervisor config (auto start)
+ADD conf/supervisor.conf  /etc/supervisor/conf.d/
+
+# Unblock port 5000 for the Flask app to run on
+EXPOSE 5000
+
+# execute the gunicorn app
+CMD ["supervisord", "-n"]</code></pre>
+            <p>可以看到，这里的 Docker 当中利用 supervisor 来启动 gunicorn。两个启动的配置文件分别是：</p>
+            <ul>
+                <li>conf/gunicorn.conf</li>
+            </ul>
+            <pre><code>workers = 2
+worker_class = 'eventlet'
+bind = '0.0.0.0:5000'
+timeout = 1200
+pidfile = 'gunicorn.pid'</code></pre>
+            <p>这里的 workers 可能是你需要改的地方，看你想复制几个 flask 的 core。越多当然就越吃资源啦。</p>
+            <ul>
+                <li>conf/supervisor.conf</li>
+            </ul>
+            <pre><code>[program:app]
+directory=/home/gunicorn_docker/scripts
+command=/bin/bash restart.sh
+autostart=true
+autorestart=false
+startsecs=0
+startretries=3
+user=root</code></pre>
+           <p>这里 supervisor 的文件基本就是进入到 scripts directory 然后执行我们的 restart.sh 命令。</p>
+           <p>有关这种东西该如何配置，可以自行去 <a href="http://gunicorn.org/" class="text-danger">gunicorn</a> 和 <a href="http://supervisord.org/index.html" class="text-danger">supervisor</a> 的官网上去看哈。</p>
+           <h2 class="section-heading">创建 image 和启动 container</h2>
+           <p>最后，可以创建两个 scripts 来生成 image 和启动 container了。</p>
+           <ul>
+             <li>create_image.sh</li>
+           </ul>
+           <pre><code>#!/usr/bin/env bash
+cd ../
+docker build -t gunicorn_docker .</code></pre>
+            <p>这里<code>-t</code>是为了能给 container 一个名字。方便启动和查看</p>
+            <ul>
+             <li>create_image.sh</li>
+           </ul>
+           <pre><code>#!/usr/bin/env bash
+
+docker rm -f gunicorn_docker
+docker run -d -p 5000:5000 --name gunicorn_docker gunicorn_docker</code></pre>
+           <p>在 background mode 在启动 gunicorn docker。到此，所有的过程已经完成。</p>
+           <h2 class="section-heading">Reference </h2>
+           <p><a href="https://github.com/alphafan/gunicorn_docker" class="text-danger">源码传送门和使用说明。</a></p>
           </div>    
         </div>
       </div>
